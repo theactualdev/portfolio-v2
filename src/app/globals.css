@@ -27,4 +27,14 @@
 }
 
 :root { color-scheme: dark; }
-html, body { background: var(--color-ground); color: var(--color-ink); }
+/*
+ * Only the root carries the ground colour. The root's background propagates
+ * to the viewport canvas, which paints beneath everything — including a
+ * negative-z-index layer. A background on <body> does NOT: body is an
+ * in-flow block, and block backgrounds paint AFTER negative-z-index stacking
+ * contexts, so it would sit on top of the `fixed inset-0 -z-10` SurfaceCanvas
+ * and hide it completely. Measured: with `background` on body the surface
+ * rendered correctly and was 100% occluded (page uniformly #0a0a0b).
+ */
+html { background: var(--color-ground); }
+html, body { color: var(--color-ink); }
