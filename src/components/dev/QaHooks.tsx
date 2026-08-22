@@ -55,8 +55,15 @@ export default function QaHooks() {
         // freeze() stops it. Without this, freeze-then-scroll silently no-ops.
         if (window.__lenis) window.__lenis.scrollTo(y, { immediate: true, force: true });
         else {
-          document.documentElement.style.scrollBehavior = "auto";
+          // Suppress any `scroll-behavior: smooth` for this one jump, then put
+          // the inline value back. window.scrollTo is synchronous under `auto`,
+          // so restoring on the next line cannot cut the scroll short — and the
+          // page keeps whatever scroll behaviour it had before the call.
+          const root = document.documentElement;
+          const prev = root.style.scrollBehavior;
+          root.style.scrollBehavior = "auto";
           window.scrollTo(0, y);
+          root.style.scrollBehavior = prev;
         }
       },
       seek(t) {
