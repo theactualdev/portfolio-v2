@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/*
+ * Lenis ships behavioural CSS its JS depends on, and nothing else imports it.
+ * Without it `.lenis-stopped { overflow: clip }` never lands, so freeze()
+ * blocks wheel/touch but not keyboard or scrollbar-drag; `html.lenis` never
+ * relaxes the root height; and `.lenis-smooth iframe` never goes inert.
+ * Imported unlayered on purpose — it must outrank Tailwind's utility layer so
+ * `html.lenis { height: auto }` beats the `h-full` on <html>.
+ */
+@import "lenis/dist/lenis.css";
+
 @theme {
   --color-ground: #0a0a0b;
   --color-elevated: #131315;
