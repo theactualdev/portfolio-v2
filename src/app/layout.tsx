@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import QaHooks from "@/components/dev/QaHooks";
+import SmoothScroll from "@/components/providers/SmoothScroll";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
         {process.env.NODE_ENV !== "production" && <QaHooks />}
-        {children}
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );
