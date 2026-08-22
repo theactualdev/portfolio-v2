@@ -1,4 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --color-ground: #0a0a0b;
+  --color-elevated: #131315;
+  --color-ink: #e9e6df;
+  --color-ink-muted: #8b8880;
+  /* Provisional. Task 5 locks ONE of these and deletes the other. */
+  --color-accent: #d9a441;      /* deeper amber */
+  --color-accent-alt: #e7c27d;  /* paler cream-amber */
+}
+
 :root { color-scheme: dark; }
-html, body { background: #0a0a0b; color: #e9e6df; }
+html, body { background: var(--color-ground); color: var(--color-ink); }
