@@ -10,7 +10,13 @@
  */
 @import "lenis/dist/lenis.css";
 
-@theme {
+/*
+ * `static` forces every custom property below into the output even when no
+ * utility references it. Without it Tailwind v4 tree-shakes unused theme keys,
+ * so raw `var(--color-accent)` in an inline style resolves to nothing and
+ * renders transparent with no error.
+ */
+@theme static {
   --color-ground: #0a0a0b;
   --color-elevated: #131315;
   --color-ink: #e9e6df;
