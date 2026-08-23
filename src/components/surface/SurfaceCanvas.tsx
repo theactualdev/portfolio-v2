@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import * as THREE from "three";
 import { surfaceVert, surfaceFrag } from "./surface.glsl";
 
@@ -132,23 +132,37 @@ function webglAvailable() {
   }
 }
 
+/** matchMedia as an external store, so no setState happens inside an effect. */
+function subscribeMedia(query: string) {
+  return (onChange: () => void) => {
+    const mq = window.matchMedia(query);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  };
+}
+
+const subscribeReducedMotion = subscribeMedia("(prefers-reduced-motion: reduce)");
+const noopSubscribe = () => () => {};
+
 export default function SurfaceCanvas(props: Props) {
-  const [supported, setSupported] = useState(true);
+  /**
+   * WebGL support and reduced-motion are both external state, read through
+   * useSyncExternalStore rather than an effect + setState. The server
+   * snapshots keep hydration stable: assume WebGL is present and motion is
+   * allowed, then correct on the client if either is false.
+   */
+  const supported = useSyncExternalStore(noopSubscribe, webglAvailable, () => true);
+
   /**
    * Reduced motion is designed parity, not a switch-off: the field freezes at
    * a chosen frame (`stillTime`) rather than disappearing, so the composition
    * is still the one we designed. Watched live, matching SmoothScroll.
    */
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    setSupported(webglAvailable());
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduced(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
+  const reduced = useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false
+  );
 
   if (!supported) {
     // Same visual family as the shader's resting state — a soft warm pool on
