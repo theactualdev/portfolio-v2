@@ -55,6 +55,30 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
   );
 
   /**
+   * Pointer is tracked on `window`, NOT via R3F's `state.pointer`.
+   *
+   * R3F only updates `state.pointer` from events landing on its own canvas.
+   * This canvas is a fixed, -z-10 page background, so `<main>` sits on top of
+   * it and swallows every pointer event — `state.pointer` never moved, and the
+   * surface never reacted. (Verified by freezing the clock and hashing frames
+   * with the pointer at opposite corners: byte-identical.)
+   *
+   * Window-level tracking is also the behaviour the design actually wants: the
+   * surface should notice you while you are over text and links, not only over
+   * bare canvas.
+   */
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      target.current.set(
+        e.clientX / window.innerWidth,
+        1 - e.clientY / window.innerHeight // UV origin is bottom-left
+      );
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
+
+  /**
    * Uniforms are written through the material ref, not through the memoized
    * `uniforms` local. It is the same object either way — three keeps the map
    * we handed it — but `react-hooks/immutability` (on by default in
@@ -66,8 +90,6 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
   useFrame((state, delta) => {
     const u = mat.current?.uniforms as SurfaceUniforms | undefined;
     if (!u) return;
-    const onMove = state.pointer; // NDC -1..1
-    target.current.set((onMove.x + 1) / 2, (onMove.y + 1) / 2);
     const prev = pointer.current.clone();
     pointer.current.lerp(target.current, 0.18); // answers within ~150ms
     vel.current = THREE.MathUtils.lerp(vel.current, prev.distanceTo(pointer.current) * 40, 0.2);

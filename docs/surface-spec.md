@@ -198,3 +198,27 @@ the manual iPhone pass.
       (previously threw "THREE.WebGLRenderer: Error creating WebGL context")
 - [ ] Pointer answers within 150ms — not yet measured
 - [ ] **Ayodele confirms "expensive, not tech-demo"** — pending, live
+
+### Pointer regression — found by the user, fixed
+
+The pointer never worked. R3F only updates `state.pointer` from events landing
+on its own canvas; this canvas is a fixed `-z-10` page background, so `<main>`
+sat on top and swallowed every event. `document.elementFromPoint` at the centre
+of the viewport returned MAIN, not CANVAS.
+
+It was not caught earlier because the verification looked at a screenshot,
+saw a bright region near where the mouse had been moved, and inferred a
+response — while the noise field was drifting between shots. The test that
+actually isolates it freezes the clock (so the pointer is the only variable)
+and hashes frames with the pointer at opposite corners:
+
+    before fix: top-left and bottom-right hashes identical
+    after fix:  hashes differ
+
+Pointer is now tracked on `window` via a passive `pointermove` listener. That
+is also the behaviour the design wants — the surface should notice you while
+you are over text and links, not only over bare canvas.
+
+Note: returning the pointer to a previous position does not reproduce a
+byte-identical frame, because `uVel` decays from a different approach vector.
+That is momentum, not a defect.
