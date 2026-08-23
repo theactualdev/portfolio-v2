@@ -95,11 +95,31 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
     vel.current = THREE.MathUtils.lerp(vel.current, prev.distanceTo(pointer.current) * 40, 0.2);
 
     u.uTime.value += delta;
-    u.uAmp.value = amplitude;
-    u.uHue.value = hueShift;
+    u.uHue.value = hueShift; // colour, not motion — the accent payoff still lands
     u.uStillTime.value = still ? stillTime : -1;
-    u.uPointer.value.copy(pointer.current);
-    u.uVel.value = Math.min(vel.current, 1);
+
+    if (still) {
+      /**
+       * Freezing the clock alone is NOT parity. `t` is one of five inputs to
+       * the composition: `uAmp` (scroll-driven) re-warps the whole field, and
+       * the pointer lens displaces uv *before* the fbm is sampled. A frozen
+       * field being dragged by a live lens looks worse than a live one — the
+       * live field absorbs the distortion into its own flow, the frozen one
+       * just smears. Measured before this guard: pointer movement under
+       * reduce-motion produced a mean delta of 2.284, the same magnitude as
+       * the normal pointer response.
+       *
+       * So the still frame pins every motion input and holds the designed
+       * composition. Hue is deliberately left live — it is colour, not motion.
+       */
+      u.uAmp.value = 0;
+      u.uPointer.value.set(0.5, 0.5);
+      u.uVel.value = 0;
+    } else {
+      u.uAmp.value = amplitude;
+      u.uPointer.value.copy(pointer.current);
+      u.uVel.value = Math.min(vel.current, 1);
+    }
     u.uRes.value.set(size.width, size.height);
     u.uQuality.value = fullQuality ? 1 : 0;
     void viewport;
@@ -172,7 +192,7 @@ export default function SurfaceCanvas(props: Props) {
         className="fixed inset-0 -z-10 bg-ground"
         style={{
           backgroundImage:
-            "radial-gradient(60% 45% at 55% 45%, #17161a 0%, #0d0d0f 55%, #0a0a0b 100%)",
+            "radial-gradient(60% 45% at 55% 45%, #1b1613 0%, #0f0d0b 55%, #0a0a0b 100%)",
         }}
       />
     );
@@ -181,7 +201,10 @@ export default function SurfaceCanvas(props: Props) {
   return (
     <div className="fixed inset-0 -z-10 bg-ground">
       <Canvas
-        dpr={[1, 1.5]}
+        // Field is entirely low-frequency (fbm, gaussian lens, vignette), so a
+        // 1.5 cap supersamples detail that does not exist while costing 2.25x
+        // the fragments on a phone. Capped at 1 until a measured reason exists.
+        dpr={[1, 1]}
         gl={{ antialias: false, powerPreference: "high-performance" }}
         fallback={<div className="absolute inset-0 bg-ground" />}
       >

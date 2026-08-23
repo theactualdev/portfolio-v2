@@ -17,7 +17,9 @@ void main() {
  *
  * Knobs (all driven from SurfaceCanvas):
  *   uAmp       0..1  turbulence — scroll-driven. 0 = nearly still, 1 = churning.
- *   uHue       0..1  warmth — 0 neutral ground, 1 the amber footer finale.
+ *   uHue       0..1  warmth — 0 the resting ground, 1 the amber footer finale.
+ *                    (The ground is very slightly cool by design; "neutral" here
+ *                    means "no amber applied", not "R==G==B".)
  *   uPointer   uv    pointer position, already smoothed toward the real cursor.
  *   uVel       0..1  pointer speed — drives how hard the lens bites.
  *   uStillTime  -1   run live;  >= 0  freeze the clock AT that time (the

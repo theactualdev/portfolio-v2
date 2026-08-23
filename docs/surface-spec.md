@@ -232,3 +232,48 @@ you are over text and links, not only over bare canvas.
 Note: returning the pointer to a previous position does not reproduce a
 byte-identical frame, because `uVel` decays from a different approach vector.
 That is momentum, not a defect.
+
+## Iteration 3 — bugs found by a TDD probe that was meant to justify a skill
+
+Three fresh agents were asked to maintain the shader with no extra guidance, as
+the RED baseline for a would-be `webgl-surface` skill. **All three succeeded**,
+so the skill was NOT written — the inline documentation already does its job.
+But their proposals surfaced four real defects:
+
+1. **Reduced-motion parity was broken.** `still` pinned only the clock. `uAmp`
+   (scroll-driven) and the pointer lens kept updating, and the lens displaces
+   `uv` *before* the fbm is sampled — so a frozen field was being smeared by a
+   live lens, which looks worse than a live field, because a live field absorbs
+   the distortion into its own flow. Measured: pointer movement under
+   reduce-motion produced mean delta 2.284, the same magnitude as the normal
+   pointer response. Now every motion input is pinned: **mean 0, max 0**, while
+   normal pointer response is unaffected (mean 3.343).
+
+   The earlier "reduced-motion frozen: true" result was not wrong, it was
+   under-tested — that check never moved the pointer or scrolled.
+
+2. **The shader docstring lied.** It claimed `uHue 0` = "neutral ground" while
+   `deep` and `mid` are blue-biased (B > R). Corrected to say what it means:
+   no amber applied, not R==G==B.
+
+3. **The no-WebGL fallback comment said "warm pool"** while its colours were
+   cool (`#17161a` etc. all have B >= R). Warmed to match its own description.
+
+4. **DPR cap was 1.5 on a low-frequency field.** fbm, a gaussian lens and a
+   vignette have no edge detail for supersampling to protect, so the cap was
+   buying nothing at 2.25x the fragments on a phone. Capped at 1.
+
+### Measured after iteration 3
+
+| Run | fps | p95 gap |
+|---|---|---|
+| Desktop, full tier, 1600x1000 | 60.1 | 16.9 |
+| Mobile, touch-emulated, 390x844, 4x CPU | 59.4 | 16.8 |
+
+### Decision: no `webgl-surface` skill
+
+The plan called for one. The RED baseline says it is not needed — three agents
+independently proposed sound, well-reasoned edits (one of them catching a
+coupled `stillTime` recalculation that preserves the designed frame exactly).
+Writing a skill against a passing baseline would be ceremony. If a future
+session mis-tunes the shader, that is the failing test that justifies it.
