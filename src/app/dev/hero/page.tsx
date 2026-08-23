@@ -35,7 +35,7 @@ export default function HeroPrototype() {
   // Lazy init: under reduced motion amp starts (and stays) at rest — no
   // setState inside the effect body, which React 19's lint rightly rejects.
   const [amp, setAmp] = useState(() => (prefersReducedMotion() ? REST_AMP : 0));
-  const [cursor, setCursor] = useState<CursorVariant>("mati");
+  const [cursor, setCursor] = useState<CursorVariant>("meander"); // LOCKED 2026-08-23
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
