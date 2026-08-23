@@ -19,6 +19,7 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import SurfaceCanvas from "@/components/surface/SurfaceCanvas";
+import GreekCursor, { type CursorVariant } from "@/components/cursor/GreekCursor";
 import { qaRegister } from "@/components/dev/QaHooks";
 import { EASE, DUR, STAGGER, prefersReducedMotion } from "@/lib/motion/tokens";
 import "../specimens/fonts.css"; // General Sans (local, deterministic)
@@ -34,6 +35,16 @@ export default function HeroPrototype() {
   // Lazy init: under reduced motion amp starts (and stays) at rest — no
   // setState inside the effect body, which React 19's lint rightly rejects.
   const [amp, setAmp] = useState(() => (prefersReducedMotion() ? REST_AMP : 0));
+  const [cursor, setCursor] = useState<CursorVariant>("mati");
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "1") setCursor("mati");
+      if (e.key === "2") setCursor("meander");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
@@ -93,6 +104,7 @@ export default function HeroPrototype() {
       <link rel="stylesheet" href={ARCHIVO} />
 
       <SurfaceCanvas amplitude={amp} />
+      <GreekCursor variant={cursor} />
 
       {/* Ceremony veil: the ground colour, lifting as the field wakes. */}
       <div data-veil className="fixed inset-0 z-10 bg-ground pointer-events-none" />
@@ -143,7 +155,25 @@ export default function HeroPrototype() {
           className="mt-10 text-[0.8rem] text-ink-muted/80"
           style={{ fontFamily: '"General Sans", system-ui, sans-serif' }}
         >
-          Go on — move your cursor.
+          Go on — move your cursor. Hover{" "}
+          <a
+            href="https://github.com/theactualdev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent underline underline-offset-4"
+          >
+            this link
+          </a>{" "}
+          to see it react.
+        </p>
+
+        <p
+          data-line
+          className="mt-3 text-[0.7rem] uppercase tracking-[0.28em] text-ink-muted/60"
+          style={{ fontFamily: '"General Sans", system-ui, sans-serif' }}
+        >
+          Press 1 — mati (the eye) &ensp;·&ensp; 2 — meander (the key)
+          &ensp;·&ensp; showing: {cursor}
         </p>
       </main>
 

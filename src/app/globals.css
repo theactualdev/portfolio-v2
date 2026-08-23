@@ -38,3 +38,36 @@
  */
 html { background: var(--color-ground); }
 html, body { color: var(--color-ink); }
+
+/* --- Greek cursor -------------------------------------------------------
+   The native cursor is suppressed ONLY while the custom mark is standing in
+   for it, and only on pointer-fine devices. Over text inputs the I-beam
+   carries real information, so `data-cursor="native"` hands it straight back.
+   Keyboard focus styles are untouched by any of this.                     */
+@media (hover: hover) and (pointer: fine) {
+  html[data-cursor="custom"],
+  html[data-cursor="custom"] * {
+    cursor: none;
+  }
+}
+
+[data-greek-cursor] {
+  transition: opacity 180ms ease-out;
+}
+[data-greek-cursor] svg {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease-out;
+  transform-origin: 50% 50%;
+}
+/* Over something clickable the mark reacts: the eye widens, the key turns. */
+[data-greek-cursor][data-state="active"] svg {
+  transform: scale(1.32) rotate(var(--cursor-turn, 0deg));
+}
+[data-greek-cursor][data-state="hidden"] svg {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-greek-cursor] svg {
+    transition: none;
+  }
+}
