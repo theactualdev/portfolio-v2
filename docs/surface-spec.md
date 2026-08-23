@@ -196,8 +196,18 @@ the manual iPhone pass.
       composition (verified: two shots 1.8s apart byte-identical)
 - [x] No-WebGL fallback renders a composed radial field, zero pageerrors
       (previously threw "THREE.WebGLRenderer: Error creating WebGL context")
-- [ ] Pointer answers within 150ms — not yet measured
-- [ ] **Ayodele confirms "expensive, not tech-demo"** — pending, live
+- [x] Pointer answers within 150ms — **measured: fully settled by 100ms**.
+      Method: freeze the clock (pointer becomes the only variable), settle at
+      A, jump to B, screenshot at +50/100/150/250/1500ms and diff each against
+      A normalised by the settled difference. Result: +50ms = 313% of final
+      (the uVel term flares the glint during the move), +100ms onward = 100%.
+      The overshoot is the designed "bite", not instability.
+- [~] **Ayodele confirms "expensive, not tech-demo"** — PROVISIONALLY ACCEPTED.
+      He looked at it live (after the pointer regression was fixed) and said
+      "move on" rather than naming a dial. Judging a background material on a
+      blank page is artificial; it is designed to sit behind content. The real
+      verdict comes in situ once the hero and sections are on top of it, and
+      the fallback ladder stays open until then.
 
 ### Pointer regression — found by the user, fixed
 
