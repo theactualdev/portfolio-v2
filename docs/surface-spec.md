@@ -144,3 +144,57 @@ None yet.
 - The spike route does not register a driver tween with `qaRegister`, so
   `window.__qa.seek()` cannot yet walk `uAmp`/`uHue` for deterministic capture.
 - The no-WebGL fallback path (gate 5) has not been exercised.
+
+## Iteration 2 — material rewrite (controller, interactive)
+
+The Step-2 starter material rendered but read as a black screen with concentric
+banding: no liquid character, invisible glint, mean luminance 8.4/255.
+
+Changes:
+- **Two-level domain-warped fbm** (3 octaves) replaces single-pass noise. This
+  is what makes it read as liquid rather than as a gradient with noise on top.
+- **Pointer lens**: the field is displaced toward the cursor with a gaussian
+  falloff, strength scaled by pointer velocity, plus an amber specular glint
+  and a faint cool rim just outside the lens.
+- **Dither** (sub-LSB, per-pixel, time-varying) before output. Near-black
+  gradients quantise to visible concentric rings in 8-bit; this removes them.
+  Measured: distinct grey levels 140 (was heavily banded).
+- **Tonal range lifted**: deep 0.038 / mid 0.105 / high 0.235. Vignette floor
+  raised 0.72 -> 0.84 so edges do not crush to flat black.
+
+### Quality tier (`uQuality`)
+
+The second warp level costs 2 extra fbm calls and took touch devices from
+58 -> 35 fps under 4x CPU throttle. It is now gated on
+`(hover: hover) and (pointer: fine)` — **pointer capability, not screen width**.
+A touch device has no cursor, so the signature interaction is absent there
+anyway; one warp level is the honest tier, not a degraded one.
+
+### Measured (dev server, headless Chrome)
+
+| Run | fps | p95 gap | max gap |
+|---|---|---|---|
+| Blank page baseline, 1600x1000 @1x | 60.1 | 16.80 | 17.70 |
+| Spike desktop, full tier, 1600x1000 @1x | 60.1 | 16.90 | 20.40 |
+| Spike mobile, touch-emulated, 390x844 @3x, 4x CPU | 59.4 | 16.80 | 66.70 |
+
+Desktop p95 is within 0.1ms of the blank-page baseline. Mobile passes the
+>=40fps gate with room.
+
+**Probe caveat found during this pass:** the probe measured the *desktop* code
+path on "mobile" runs, because a small viewport in desktop Chrome still reports
+`hover: hover`. Fixed with `--touch`, which emulates a real device
+(`isMobile` + `hasTouch`) so Chrome reports `hover: none` / `pointer: coarse`
+natively. Headless numbers remain indicative only — the authority for mobile is
+the manual iPhone pass.
+
+### Gates status
+
+- [x] Desktop p95 within 2ms of blank baseline (0.1ms)
+- [x] >=40fps at 390x844 under 4x CPU throttle (59.4)
+- [x] Reduced-motion freezes at a chosen frame and reads as a designed
+      composition (verified: two shots 1.8s apart byte-identical)
+- [x] No-WebGL fallback renders a composed radial field, zero pageerrors
+      (previously threw "THREE.WebGLRenderer: Error creating WebGL context")
+- [ ] Pointer answers within 150ms — not yet measured
+- [ ] **Ayodele confirms "expensive, not tech-demo"** — pending, live

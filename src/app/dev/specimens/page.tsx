@@ -15,7 +15,6 @@ export default function Specimens() {
 
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={GOOGLE_FONTS} />
 
       <div className="w-full bg-ground text-ink">

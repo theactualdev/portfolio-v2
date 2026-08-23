@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { surfaceVert, surfaceFrag } from "./surface.glsl";
 
@@ -20,6 +20,7 @@ type SurfaceUniforms = {
   uPointer: { value: THREE.Vector2 };
   uVel: { value: number };
   uRes: { value: THREE.Vector2 };
+  uQuality: { value: number };
 };
 
 function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 2.4 }: Props) {
@@ -34,7 +35,22 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
       uTime: { value: 0 }, uAmp: { value: 0 }, uHue: { value: 0 },
       uStillTime: { value: -1 }, uPointer: { value: new THREE.Vector2(0.5, 0.5) },
       uVel: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) },
+      uQuality: { value: 1 },
     }),
+    []
+  );
+
+  /**
+   * Full quality means the two-level domain warp. It is gated on a real
+   * pointer rather than on screen width: the surface's whole signature is
+   * reacting to a cursor, and a device without one is not being given a
+   * degraded experience by drawing a simpler field. Measured: the second
+   * warp level cost mobile 58 -> 35 fps under 4x CPU throttle.
+   */
+  const fullQuality = useMemo(
+    () =>
+      typeof window === "undefined" ||
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches,
     []
   );
 
@@ -63,6 +79,7 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
     u.uPointer.value.copy(pointer.current);
     u.uVel.value = Math.min(vel.current, 1);
     u.uRes.value.set(size.width, size.height);
+    u.uQuality.value = fullQuality ? 1 : 0;
     void viewport;
   });
 
@@ -81,16 +98,58 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
   );
 }
 
+/** One-off probe. R3F's `fallback` renders a replacement but three still
+ *  throws "Error creating WebGL context" first, so decide before mounting. */
+function webglAvailable() {
+  if (typeof document === "undefined") return true; // assume yes during SSR
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
 export default function SurfaceCanvas(props: Props) {
+  const [supported, setSupported] = useState(true);
+  /**
+   * Reduced motion is designed parity, not a switch-off: the field freezes at
+   * a chosen frame (`stillTime`) rather than disappearing, so the composition
+   * is still the one we designed. Watched live, matching SmoothScroll.
+   */
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    setSupported(webglAvailable());
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduced(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  if (!supported) {
+    // Same visual family as the shader's resting state — a soft warm pool on
+    // the ground colour — so a machine without WebGL still gets a composition.
+    return (
+      <div
+        className="fixed inset-0 -z-10 bg-ground"
+        style={{
+          backgroundImage:
+            "radial-gradient(60% 45% at 55% 45%, #17161a 0%, #0d0d0f 55%, #0a0a0b 100%)",
+        }}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 -z-10 bg-ground">
       <Canvas
         dpr={[1, 1.5]}
         gl={{ antialias: false, powerPreference: "high-performance" }}
-        // Static fallback when WebGL is unavailable — same visual family.
         fallback={<div className="absolute inset-0 bg-ground" />}
       >
-        <SurfacePlane {...props} />
+        <SurfacePlane {...props} still={props.still || reduced} />
       </Canvas>
     </div>
   );
