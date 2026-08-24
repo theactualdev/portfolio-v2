@@ -5,7 +5,19 @@ import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import * as THREE from "three";
 import { surfaceVert, surfaceFrag } from "./surface.glsl";
 
-type Props = { amplitude?: number; hueShift?: number; still?: boolean; stillTime?: number };
+type Props = {
+  amplitude?: number;
+  hueShift?: number;
+  still?: boolean;
+  stillTime?: number;
+  /**
+   * Mutable per-frame channel (see `surfaceDriver.ts`). When supplied it takes
+   * precedence over the `amplitude`/`hueShift` props: page choreography writes
+   * it inside GSAP onUpdate callbacks and useFrame reads it, so driving the
+   * surface costs zero React renders.
+   */
+  driver?: { amp: number; hue: number };
+};
 
 /**
  * The uniform map, named so the per-frame writer can re-type the material's
@@ -23,7 +35,13 @@ type SurfaceUniforms = {
   uQuality: { value: number };
 };
 
-function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 2.4 }: Props) {
+function SurfacePlane({
+  amplitude = 0,
+  hueShift = 0,
+  still = false,
+  stillTime = 2.4,
+  driver,
+}: Props) {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const { size, viewport } = useThree();
   const pointer = useRef(new THREE.Vector2(0.5, 0.5));
@@ -90,12 +108,17 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
   useFrame((state, delta) => {
     const u = mat.current?.uniforms as SurfaceUniforms | undefined;
     if (!u) return;
+    // Read the mutable channel fresh every frame — that is the whole point of
+    // it. Props remain the fallback for the spike route and for any consumer
+    // that has nothing to choreograph.
+    const amp = driver ? driver.amp : amplitude;
+    const hue = driver ? driver.hue : hueShift;
     const prev = pointer.current.clone();
     pointer.current.lerp(target.current, 0.18); // answers within ~150ms
     vel.current = THREE.MathUtils.lerp(vel.current, prev.distanceTo(pointer.current) * 40, 0.2);
 
     u.uTime.value += delta;
-    u.uHue.value = hueShift; // colour, not motion — the accent payoff still lands
+    u.uHue.value = hue; // colour, not motion — the accent payoff still lands
     u.uStillTime.value = still ? stillTime : -1;
 
     if (still) {
@@ -116,7 +139,7 @@ function SurfacePlane({ amplitude = 0, hueShift = 0, still = false, stillTime = 
       u.uPointer.value.set(0.5, 0.5);
       u.uVel.value = 0;
     } else {
-      u.uAmp.value = amplitude;
+      u.uAmp.value = amp;
       u.uPointer.value.copy(pointer.current);
       u.uVel.value = Math.min(vel.current, 1);
     }
