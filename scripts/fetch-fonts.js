@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- Plain CommonJS one-off script, run directly by node and never bundled. */
 /** One-off: downloads General Sans 400/500 woff2 from the CDN URLs already
- *  recorded in src/app/dev/specimens/fonts.css, into src/fonts/. */
+ *  recorded in src/app/dev/specimens/fonts.css, into src/fonts/.
+ *  Paths are resolved from the CWD — run it from the repo root. Re-running is
+ *  safe: it overwrites both files. */
 const fs = require("fs");
 const https = require("https");
 const path = require("path");
@@ -24,12 +26,16 @@ const blockOf = (i) => faceRanges.findIndex(([s, e]) => i >= s && i < e);
 
 let bad = false;
 for (let i = 0; i < 2; i++) {
-  const wIdx = blocks[i].index + blocks[i][0].length; // end of `font-weight: N;`
-  const uIdx = urls[i].index + urls[i][0].length;     // end of the matched url()
-  const wBlock = blockOf(wIdx - 1);
-  const uBlock = blockOf(uIdx - 1);
-  console.log(`pair ${i}: weight=${blocks[i][1]} (@font-face #${wBlock})  url=${urls[i][1]} (@font-face #${uBlock})`);
-  if (wBlock === -1 || wBlock !== uBlock) bad = true;
+  // Check BOTH ends. Comparing only where each match ENDS lets the failure
+  // through whenever both tails run past their own block into the same next
+  // one — they agree, and the guard waves it by.
+  const wStart = blockOf(blocks[i].index);
+  const wEnd = blockOf(blocks[i].index + blocks[i][0].length - 1);
+  const uStart = blockOf(urls[i].index);
+  const uEnd = blockOf(urls[i].index + urls[i][0].length - 1);
+  console.log(`pair ${i}: weight=${blocks[i][1]} (@font-face #${wStart}..#${wEnd})  url=${urls[i][1]} (@font-face #${uStart}..#${uEnd})`);
+  if ([wStart, wEnd, uStart, uEnd].some((b) => b === -1)) bad = true;
+  else if (new Set([wStart, wEnd, uStart, uEnd]).size !== 1) bad = true;
 }
 if (bad) { console.error("weight/url pairing crossed @font-face boundaries — refusing to download"); process.exit(1); }
 
@@ -37,7 +43,14 @@ fs.mkdirSync("src/fonts", { recursive: true });
 const get = (u, out) => new Promise((res, rej) =>
   https.get(u, { headers: { "User-Agent": "Mozilla/5.0" } }, (r) => {
     if (r.statusCode !== 200) return rej(new Error(u + " -> " + r.statusCode));
-    const w = fs.createWriteStream(out); r.pipe(w); w.on("finish", () => res(out));
+    // Without listeners on BOTH streams a mid-body truncation just unpipes:
+    // `finish` never fires, the promise never settles, and node exits 0 with a
+    // half-written .woff2 on disk. Fail loudly instead.
+    const w = fs.createWriteStream(out);
+    r.on("error", rej);
+    w.on("error", rej);
+    w.on("finish", () => res(out));
+    r.pipe(w);
   }).on("error", rej));
 
 (async () => {
@@ -47,4 +60,4 @@ const get = (u, out) => new Promise((res, rej) =>
     await get(urls[i][1], out);
     console.log("wrote", out, fs.statSync(out).size, "bytes");
   }
-})();
+})().catch((e) => { console.error("download failed:", e.message); process.exit(1); });
