@@ -5,8 +5,8 @@
  * Without it `.lenis-stopped { overflow: clip }` never lands, so freeze()
  * blocks wheel/touch but not keyboard or scrollbar-drag; `html.lenis` never
  * relaxes the root height; and `.lenis-smooth iframe` never goes inert.
- * Imported unlayered on purpose — it must outrank Tailwind's utility layer so
- * `html.lenis { height: auto }` beats the `h-full` on <html>.
+ * Imported unlayered on purpose so its rules outrank Tailwind's utility layer
+ * should a height/overflow utility ever land on <html> or <body> again.
  */
 @import "lenis/dist/lenis.css";
 
@@ -38,6 +38,11 @@
  */
 html { background: var(--color-ground); }
 html, body { color: var(--color-ink); }
+/* next/font sets --font-body on <html>, and the value it puts there already
+   carries its own metric-matched fallback face. The tail below is only the
+   last resort — and only reachable if the variable is defined at all, since an
+   undefined var() invalidates the whole declaration rather than falling through. */
+body { font-family: var(--font-body), system-ui, sans-serif; }
 
 /* --- Greek cursor -------------------------------------------------------
    The native cursor is suppressed ONLY while the custom mark is standing in
