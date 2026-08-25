@@ -55,7 +55,7 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
 
       const docH = document.documentElement.scrollHeight;
       const laneA = Math.round(window.innerWidth * 0.06);
-      const laneB = laneA + jog;
+      const laneB = laneA + Math.min(jog, Math.round(window.innerWidth * 0.09));
 
       // Boundaries are the bottom edge of every section but the last.
       const turns = nodes

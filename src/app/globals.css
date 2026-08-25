@@ -77,3 +77,28 @@ body { font-family: var(--font-body), system-ui, sans-serif; }
     transition: none;
   }
 }
+
+/* --- ceremony gating -----------------------------------------------------
+   Without JS nothing is ever hidden: [data-line] elements are visible and no
+   veil exists. With JS, lines start hidden and the veil starts opaque, and
+   GSAP animates both. Reduced motion overrides back to the composed end
+   state so the page is instantly complete. */
+.js [data-line] { opacity: 0; transform: translateY(14px); }
+[data-veil] { opacity: 0; }
+.js [data-veil] { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-line] { opacity: 1; transform: none; }
+  .js [data-veil] { opacity: 0; }
+}
+
+/* --- focus ---------------------------------------------------------------- */
+:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 4px; }
+
+/* --- skip link ------------------------------------------------------------ */
+.skip-link {
+  position: fixed; top: 0.75rem; left: 0.75rem; z-index: 100;
+  padding: 0.5rem 0.9rem; background: var(--color-elevated); color: var(--color-ink);
+  transform: translateY(-300%); transition: transform 150ms ease-out;
+}
+.skip-link:focus-visible { transform: none; }
