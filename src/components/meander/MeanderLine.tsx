@@ -53,6 +53,14 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
       const nodes = Array.from(document.querySelectorAll<HTMLElement>(sections));
       if (!nodes.length) return;
 
+      // Where the line ENDS. The terminus is meant to arrive beside the
+      // contact block, so an element can claim it with [data-meander-end];
+      // the line stops at that element's vertical centre. Without the marker
+      // the line runs to the end of content, which parks the amber head on the
+      // page's last pixel row where it is half-clipped by the viewport edge —
+      // an arrival that reads as falling off the bottom.
+      const endMark = document.querySelector<HTMLElement>("[data-meander-end]");
+
       // Measure CONTENT, never document.documentElement.scrollHeight.
       // This svg is absolutely positioned inside the page wrapper and its own
       // height attribute (set below) counts toward the document's scroll
@@ -79,7 +87,14 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
         x = x === laneA ? laneB : laneA; // turn
         d += ` L ${x} ${y}`;            // step across
       }
-      d += ` L ${x} ${docH}`;           // run to the end of the page
+      const endY = endMark
+        ? Math.round(
+            endMark.getBoundingClientRect().top +
+              window.scrollY +
+              endMark.getBoundingClientRect().height / 2
+          )
+        : docH;
+      d += ` L ${x} ${endY}`;           // run to the terminus
 
       root.setAttribute("viewBox", `0 0 ${window.innerWidth} ${docH}`);
       root.setAttribute("height", String(docH));
@@ -90,8 +105,19 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
 
       if (reduce.matches) {
         // Composed still version: already drawn, no scrub, terminus parked.
+        // Kill any trigger from a previous non-reduced build. build() re-runs
+        // on a motion-preference change, and this path never used to kill it —
+        // an orphaned trigger keeps scrubbing the "already drawn" line and
+        // drags the head back off the terminus we just parked it at.
+        trigger?.kill();
+        trigger = undefined;
         el.style.strokeDashoffset = "0";
-        if (head.current) head.current.style.opacity = "0";
+        if (head.current) {
+          const end = el.getPointAtLength(len);
+          head.current.setAttribute("cx", String(end.x));
+          head.current.setAttribute("cy", String(end.y));
+          head.current.style.opacity = "1";
+        }
         return;
       }
 
@@ -110,7 +136,9 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
             const pt = el.getPointAtLength(len * obj.p);
             head.current.setAttribute("cx", String(pt.x));
             head.current.setAttribute("cy", String(pt.y));
-            head.current.style.opacity = obj.p > 0.002 && obj.p < 0.999 ? "1" : "0";
+            // Rides to the path's end — which is the contact block — and
+            // stays there. The single amber note arrives rather than vanishing.
+            head.current.style.opacity = obj.p > 0.002 ? "1" : "0";
           }
         },
       });

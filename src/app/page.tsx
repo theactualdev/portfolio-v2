@@ -3,6 +3,10 @@
 import SurfaceLazy from "@/components/surface/SurfaceLazy";
 import GreekCursor from "@/components/cursor/GreekCursor";
 import Hero from "@/components/sections/Hero";
+import About from "@/components/sections/About";
+import Work from "@/components/sections/Work";
+import Contact from "@/components/sections/Contact";
+import ScrollTurbulence from "@/components/surface/ScrollTurbulence";
 import MeanderLine from "@/components/meander/MeanderLine";
 import { surfaceDriver } from "@/components/surface/surfaceDriver";
 
@@ -14,6 +18,7 @@ export default function Home() {
       </a>
 
       <SurfaceLazy driver={surfaceDriver} />
+      <ScrollTurbulence />
       <GreekCursor variant="meander" />
       <MeanderLine />
 
@@ -37,9 +42,15 @@ export default function Home() {
         <section id="hero" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
           <Hero />
         </section>
-        <section id="about" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]" />
-        <section id="work" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]" />
-        <section id="contact" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]" />
+        <section id="about" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+          <About />
+        </section>
+        <section id="work" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+          <Work />
+        </section>
+        <section id="contact" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+          <Contact />
+        </section>
       </main>
     </div>
   );

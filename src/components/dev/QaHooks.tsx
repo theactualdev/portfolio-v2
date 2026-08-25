@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import gsap from "gsap";
+import { surfaceDriver } from "@/components/surface/surfaceDriver";
 
 type Seekable = gsap.core.Timeline | gsap.core.Tween;
 
@@ -37,6 +38,10 @@ declare global {
       seek: (t: number) => void;
       freeze: () => void;
       register: typeof qaRegister;
+      /** Snapshot of the surface driver channel. Verification reads the
+       *  mechanism here rather than trying to sample the WebGL canvas, which
+       *  does not reliably composite into a screenshot. */
+      driver: () => { amp: number; hue: number };
     };
     __lenis?: {
       scrollTo: (y: number, o?: Record<string, unknown>) => void;
@@ -78,6 +83,7 @@ export default function QaHooks() {
         window.__lenis?.stop();
       },
       register: qaRegister,
+      driver: () => ({ amp: surfaceDriver.amp, hue: surfaceDriver.hue }),
     };
     return () => {
       delete window.__qa;
