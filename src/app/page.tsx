@@ -2,6 +2,7 @@
 
 import SurfaceLazy from "@/components/surface/SurfaceLazy";
 import GreekCursor from "@/components/cursor/GreekCursor";
+import Hero from "@/components/sections/Hero";
 import MeanderLine from "@/components/meander/MeanderLine";
 import { surfaceDriver } from "@/components/surface/surfaceDriver";
 
@@ -33,7 +34,9 @@ export default function Home() {
           scroll. Inert today (main is empty and unnamed), but Tasks 5-7 put
           ~15 focusables behind this link and the fix is free now. */}
       <main id="main" tabIndex={-1} className="relative z-10">
-        <section id="hero" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]" />
+        <section id="hero" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+          <Hero />
+        </section>
         <section id="about" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]" />
         <section id="work" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]" />
         <section id="contact" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]" />
