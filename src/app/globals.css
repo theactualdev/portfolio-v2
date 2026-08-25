@@ -102,3 +102,11 @@ body { font-family: var(--font-body), system-ui, sans-serif; }
   transform: translateY(-300%); transition: transform 150ms ease-out;
 }
 .skip-link:focus-visible { transform: none; }
+
+/* Must sit AFTER the rule above: same specificity (0,1,0), so source order is
+   what decides. Declared up in the reduced-motion block it silently lost, and
+   the slide kept running — the one bit of motion `reduce` failed to switch off,
+   on the first element a keyboard user ever touches. */
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}

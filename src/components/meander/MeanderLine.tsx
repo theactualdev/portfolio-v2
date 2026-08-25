@@ -53,7 +53,17 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
       const nodes = Array.from(document.querySelectorAll<HTMLElement>(sections));
       if (!nodes.length) return;
 
-      const docH = document.documentElement.scrollHeight;
+      // Measure CONTENT, never document.documentElement.scrollHeight.
+      // This svg is absolutely positioned inside the page wrapper and its own
+      // height attribute (set below) counts toward the document's scroll
+      // extent — so reading scrollHeight here reads back last build's output.
+      // The page could then grow but never shrink: one phone rotation, window
+      // drag or devtools open left a permanent dead scroll tail (measured:
+      // 1816px past the end of content on a 390x844 -> 844x390 rotation, and
+      // it ratcheted further on every subsequent shrink). Content height is
+      // the quantity we actually want and the svg cannot contribute to it.
+      const last = nodes[nodes.length - 1];
+      const docH = Math.round(last.getBoundingClientRect().bottom + window.scrollY);
       const laneA = Math.round(window.innerWidth * 0.06);
       const laneB = laneA + Math.min(jog, Math.round(window.innerWidth * 0.09));
 
