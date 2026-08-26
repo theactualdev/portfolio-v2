@@ -52,9 +52,32 @@ Phase 1 recorded desktop 60.1 fps / p95 16.9 ms and mobile 59.4 fps / p95
 p95; both runs land within 0.1 ms of Phase 1 **with the full page, four
 ScrollTriggers and the meander on top of the surface**.
 
-One earlier mobile run showed 57.1 fps with a single 83.3 ms hitch. It has not
-reproduced across subsequent runs; if it returns, profile before shipping —
-the usual suspect is a layout read in a scroll handler.
+### Mobile re-measurement, 2026-08-26 late — NOT TRUSTWORTHY, re-do it
+
+After the final-review fixes the mobile probe was re-run and gave **36.7,
+47.4 and 56.3 fps** across three runs, with p95 swinging 50.1 → 49.9 →
+17.1 ms. Do not read that as a regression, and do not read the good run as a
+pass. The machine had **1.0–1.3 GB of 7.8 GB free** with 15 of the owner's
+Chrome processes open, and the numbers track that, not the code:
+
+- The **median gap stayed 16.7 ms in every single run**. A genuine per-frame
+  regression raises the median. What moved was p95 and max — sporadic long
+  frames, which is the signature of CPU/memory contention.
+- Neither change in that batch can cost frames in this probe anyway: the probe
+  sweeps the **pointer**, never scrolls, so `MeanderLine.paint()` (scroll-only)
+  effectively does not run, and the amplitude handover only changes *when*
+  ScrollTurbulence's ticker starts, not its per-frame work.
+- The dev server also became unusable for throttled runs after a `next build`
+  invalidated its cache: under 4× CPU the first compile exceeds the probe's
+  30 s navigation timeout. Measure against `next start`, and warm it first.
+
+**Outstanding: mobile frame budget is unverified since the final-review fixes.**
+Re-run on an unloaded machine, and treat the Task 11 iPhone pass as the real
+verdict — it is ship-blocking for exactly this reason.
+
+An earlier mobile run also showed 57.1 fps with a single 83.3 ms hitch. If a
+raised *median* ever appears, profile before shipping — the usual suspect is a
+layout read in a scroll handler.
 
 ### LCP
 

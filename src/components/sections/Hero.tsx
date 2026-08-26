@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import gsap from "gsap";
 import { qaRegister } from "@/components/dev/QaHooks";
 import { EASE, DUR, STAGGER } from "@/lib/motion/tokens";
-import { surfaceDriver, REST_AMP } from "@/components/surface/surfaceDriver";
+import { surfaceDriver, REST_AMP, releaseAmp } from "@/components/surface/surfaceDriver";
 
 /**
  * The entry ceremony. THE SURFACE IS THE HERO.
@@ -37,6 +37,7 @@ export default function Hero() {
       gsap.set("[data-line]", { opacity: 1, y: 0 });
       gsap.set("[data-veil]", { opacity: 0 });
       surfaceDriver.amp = REST_AMP;
+      releaseAmp();
     };
 
     const ceremony = () => {
@@ -62,7 +63,12 @@ export default function Hero() {
          * per frame, 60 times a second. This costs zero renders.
          */
         const breathe = () =>
-          gsap.to(surfaceDriver, { amp: REST_AMP, duration: DUR.l, ease: EASE.move });
+          gsap.to(surfaceDriver, {
+            amp: REST_AMP,
+            duration: DUR.l,
+            ease: EASE.move,
+            onComplete: releaseAmp,
+          });
         whenSurfaceReady(breathe);
 
         const unregister = qaRegister(tl);
@@ -71,7 +77,12 @@ export default function Hero() {
         const skip = () => {
           tl.progress(1);
           cancelWait?.();
-          gsap.to(surfaceDriver, { amp: REST_AMP, duration: DUR.s, ease: EASE.move });
+          gsap.to(surfaceDriver, {
+            amp: REST_AMP,
+            duration: DUR.s,
+            ease: EASE.move,
+            onComplete: releaseAmp,
+          });
         };
         window.addEventListener("wheel", skip, { once: true, passive: true });
         window.addEventListener("pointerdown", skip, { once: true });

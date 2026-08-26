@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import gsap from "gsap";
-import { surfaceDriver, REST_AMP } from "@/components/surface/surfaceDriver";
+import { surfaceDriver, REST_AMP, onAmpRelease } from "@/components/surface/surfaceDriver";
 
 /**
  * Maps scroll velocity to surface turbulence: the sea churns while you travel
@@ -12,15 +12,16 @@ import { surfaceDriver, REST_AMP } from "@/components/surface/surfaceDriver";
  * decaying scroll-delta estimate when it is not (touch, or reduced motion —
  * where the surface pins amplitude anyway, making this a no-op).
  *
- * Coexists with the hero ceremony, which also writes surfaceDriver.amp for its
- * first ~1.1s: the lerp below eases toward its target from whatever value the
- * ceremony left, so the two never fight. Scrolling also skips the ceremony,
- * which resolves the overlap by design.
+ * Does not touch amplitude until the ceremony hands it over (see
+ * surfaceDriver's releaseAmp). Running from hydration meant this lerp raced the
+ * lazy WebGL chunk and won — the field was already at rest before there was a
+ * canvas to watch it wake on.
  */
 export default function ScrollTurbulence() {
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     let running = false;
+    let released = false;
 
     let lastY = window.scrollY;
     let fallbackVel = 0;
@@ -53,11 +54,22 @@ export default function ScrollTurbulence() {
       window.removeEventListener("scroll", onScroll);
     };
 
-    const sync = () => (mq.matches ? stop() : start());
-    sync();
+    // Only act once the ceremony has released amplitude; a preference change
+    // before that just updates intent, it does not start the ticker early.
+    const sync = () => {
+      if (!released) return;
+      if (mq.matches) stop();
+      else start();
+    };
+
+    const cancel = onAmpRelease(() => {
+      released = true;
+      sync();
+    });
     mq.addEventListener("change", sync);
 
     return () => {
+      cancel();
       mq.removeEventListener("change", sync);
       stop();
     };

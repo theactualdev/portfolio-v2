@@ -122,28 +122,52 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
       }
 
       el.style.strokeDashoffset = `${len}`;
-      // Clear a head parked by a previous reduced-motion build: the fresh
-      // trigger starts at progress 0, so onUpdate never fires to move it.
-      if (head.current) head.current.style.opacity = "0";
       trigger?.kill();
-      const obj = { p: 0 };
+
+      /**
+       * The tip LEADS the reader; it does not trail above them.
+       *
+       * Mapping the dash offset to raw scroll progress made the spine a
+       * top-anchored stub: at scrollY 0 nothing was drawn at all, so on the one
+       * screen the site is judged on the motif did not exist and the gutter the
+       * sections reserve for it read as an unexplained indent. The tip also
+       * advanced faster than the content it was meant to spine, reaching only
+       * half the viewport height at the very last pixel of the page.
+       *
+       * So the drawn length is derived from a document position a little below
+       * the fold instead. Section one is already spined when the veil lifts,
+       * and the amber tip stays ahead of the copy being read. The path is
+       * vertical runs plus fixed jogs, so length up to a document y is just
+       * y plus one jog for every boundary already passed — no path sampling.
+       */
+      const jogPx = laneB - laneA;
+      const LEAD = 0.82; // keeps the tip inside the viewport, not on its edge
+      const drawnAt = (docY: number) => {
+        let passed = 0;
+        for (const t of turns) if (t <= docY) passed++;
+        return Math.min(len, Math.max(0, docY + jogPx * passed));
+      };
+
+      const paint = () => {
+        const drawn = drawnAt(window.scrollY + window.innerHeight * LEAD);
+        el.style.strokeDashoffset = `${len - drawn}`;
+        // the single amber note rides the drawing head
+        if (head.current) {
+          const pt = el.getPointAtLength(drawn);
+          head.current.setAttribute("cx", String(pt.x));
+          head.current.setAttribute("cy", String(pt.y));
+          // Rides to the path's end — which is the contact block — and stays
+          // there. The single amber note arrives rather than vanishing.
+          head.current.style.opacity = drawn > 2 ? "1" : "0";
+        }
+      };
+
+      paint(); // draw the arrival screen before any scrolling happens
       trigger = ScrollTrigger.create({
         start: 0,
         end: () => document.documentElement.scrollHeight - window.innerHeight,
         scrub: true,
-        onUpdate: (self) => {
-          obj.p = self.progress;
-          el.style.strokeDashoffset = `${len * (1 - obj.p)}`;
-          // the single amber note rides the drawing head
-          if (head.current) {
-            const pt = el.getPointAtLength(len * obj.p);
-            head.current.setAttribute("cx", String(pt.x));
-            head.current.setAttribute("cy", String(pt.y));
-            // Rides to the path's end — which is the contact block — and
-            // stays there. The single amber note arrives rather than vanishing.
-            head.current.style.opacity = obj.p > 0.002 ? "1" : "0";
-          }
-        },
+        onUpdate: paint,
       });
     };
 
