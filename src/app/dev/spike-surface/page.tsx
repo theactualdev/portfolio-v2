@@ -1,5 +1,7 @@
 "use client";
 
+import { notFound } from "next/navigation";
+
 import { useState } from "react";
 import SurfaceCanvas from "@/components/surface/SurfaceCanvas";
 
@@ -7,7 +9,7 @@ export default function SpikeSurface() {
   const [amp, setAmp] = useState(0.3);
   const [hue, setHue] = useState(0);
   const [still, setStill] = useState(false);
-  if (process.env.NODE_ENV === "production") return null;
+  if (process.env.NODE_ENV === "production") notFound();
   return (
     <main className="min-h-screen">
       <SurfaceCanvas amplitude={amp} hueShift={hue} still={still} />

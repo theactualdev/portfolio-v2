@@ -19,6 +19,7 @@ export default function About() {
 
   return (
     <div ref={root}>
+      <h2 className="sr-only">About</h2>
       <p
         data-reveal
         className="text-[0.68rem] uppercase tracking-[0.35em] text-ink-muted"

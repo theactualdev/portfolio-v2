@@ -1,5 +1,7 @@
 "use client";
 
+import { notFound } from "next/navigation";
+
 /**
  * Meander-as-structure prototype (dev only).
  *
@@ -35,7 +37,7 @@ const WORK = [
 
 export default function MeanderPrototype() {
   const [amp] = useState(0.26);
-  if (process.env.NODE_ENV === "production") return null;
+  if (process.env.NODE_ENV === "production") notFound();
 
   return (
     <div className="relative text-ink">

@@ -212,6 +212,7 @@ export default function SurfaceCanvas(props: Props) {
     // the ground colour — so a machine without WebGL still gets a composition.
     return (
       <div
+        aria-hidden="true"
         className="fixed inset-0 -z-10 bg-ground"
         style={{
           backgroundImage:
@@ -222,7 +223,7 @@ export default function SurfaceCanvas(props: Props) {
   }
 
   return (
-    <div className="fixed inset-0 -z-10 bg-ground">
+    <div aria-hidden="true" className="fixed inset-0 -z-10 bg-ground">
       <Canvas
         // Field is entirely low-frequency (fbm, gaussian lens, vignette), so a
         // 1.5 cap supersamples detail that does not exist while costing 2.25x

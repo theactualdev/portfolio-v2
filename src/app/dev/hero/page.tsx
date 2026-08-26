@@ -1,5 +1,7 @@
 "use client";
 
+import { notFound } from "next/navigation";
+
 /**
  * Hero concept prototype (dev only): THE SURFACE IS THE HERO.
  *
@@ -97,7 +99,7 @@ export default function HeroPrototype() {
     return () => ctx.revert();
   }, []);
 
-  if (process.env.NODE_ENV === "production") return null;
+  if (process.env.NODE_ENV === "production") notFound();
 
   return (
     <div ref={root} className="relative min-h-screen overflow-hidden text-ink">

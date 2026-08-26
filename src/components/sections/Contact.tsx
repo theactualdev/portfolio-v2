@@ -87,13 +87,14 @@ export default function Contact() {
           </a>
         ))}
       </div>
-      <p
+      {/* A real landmark, not just a line of small type. */}
+      <footer
         data-reveal
         className="mt-16 text-[0.62rem] uppercase tracking-[0.3em] text-ink-muted"
         style={{ fontFamily: BODY }}
       >
         © 2026 theactualdev
-      </p>
+      </footer>
     </div>
   );
 }

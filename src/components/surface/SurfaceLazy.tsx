@@ -9,6 +9,7 @@ const SurfaceCanvas = dynamic(() => import("./SurfaceCanvas"), {
   // cross-fade in feel rather than a pop. Fixed background => zero CLS.
   loading: () => (
     <div
+      aria-hidden="true"
       className="fixed inset-0 -z-10 bg-ground"
       style={{
         backgroundImage:
