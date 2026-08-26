@@ -13,11 +13,11 @@ const DISPLAY = "var(--font-display), system-ui, sans-serif";
  * no invented case-study routes behind these.
  */
 const WORK = [
-  { n: "01", name: "MSE LUX", note: "E-commerce — Paystack, Prisma, Next.js", live: "https://mse-lux-seven.vercel.app", code: "https://github.com/theactualdev/MSE-LUX" },
-  { n: "02", name: "Bleachers", note: "Event-sourced sports PWA — NestJS, offline-first", live: "https://bleachers-lovat.vercel.app", code: "https://github.com/theactualdev/bleachers" },
-  { n: "03", name: "Nevo", note: "Adaptive learning platform — founding engineer", live: "https://nevolearning.com", code: "https://github.com/teslimsadiqnevo/nevo-frontend-2.0" },
+  { n: "01", name: "Nevo", note: "Adaptive learning platform — founding engineer", live: "https://nevolearning.com", code: "https://github.com/teslimsadiqnevo/nevo-frontend-2.0" },
+  { n: "02", name: "MSE LUX", note: "E-commerce — Paystack, Prisma, Next.js", live: "https://mse-lux-seven.vercel.app", code: "https://github.com/theactualdev/MSE-LUX" },
+  { n: "03", name: "Bleachers", note: "Event-sourced sports PWA — NestJS, offline-first", live: "https://bleachers-lovat.vercel.app", code: "https://github.com/theactualdev/bleachers" },
   { n: "04", name: "GPA Calculator", note: "Vite, React, TypeScript", live: "https://theactual-gpa.vercel.app", code: "https://github.com/theactualdev/theactualGPA" },
-  { n: "05", name: "FaceBlur", note: "In-browser AI face blurring", live: "https://faceblur-theactualdev.vercel.app", code: "https://github.com/theactualdev/faceblur" },
+  { n: "05", name: "FaceBlur", note: "In-browser AI face blurring", live: "https://faceblur-v3.vercel.app", code: "https://github.com/theactualdev/faceblur" },
 ];
 
 export default function Work() {
