@@ -21,7 +21,13 @@
   --color-ground: #0a0a0b;
   --color-elevated: #131315;
   --color-ink: #e9e6df;
-  --color-ink-muted: #8b8880;
+  /* Lightened from #8b8880. That value was chosen against the flat ground
+     (5.59:1) but the text sits on a MOVING field: measured per element, the
+     warmed finale put the three social links at 3.21-3.75:1 and the section
+     label at 3.80:1 — all below AA. Against the worst per-element background
+     measured anywhere on the page (luminance 0.0556, the warm settled bottom)
+     this holds 4.64:1, and 9.23:1 over the ground. */
+  --color-ink-muted: #b4b1a8;
   /* Provisional. Task 5 locks ONE of these and deletes the other. */
   --color-accent: #d9a441;      /* deeper amber */
   --color-accent-alt: #e7c27d;  /* paler cream-amber */
@@ -84,11 +90,18 @@ body { font-family: var(--font-body), system-ui, sans-serif; }
    GSAP animates both. Reduced motion overrides back to the composed end
    state so the page is instantly complete. */
 .js [data-line] { opacity: 0; transform: translateY(14px); }
+/* Same gating for the section-reveal convention. Without it the sections paint
+   fully visible from the server and are then blanked by gsap.set at hydration —
+   a visitor who reloads scrolled below the hero watches finished copy appear,
+   vanish, then fade back in. That is precisely the flash this mechanism exists
+   to prevent, and [data-line] was the only attribute protected from it. */
+.js [data-reveal] { opacity: 0; transform: translateY(14px); }
 [data-veil] { opacity: 0; }
 .js [data-veil] { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .js [data-line] { opacity: 1; transform: none; }
+  .js [data-reveal] { opacity: 1; transform: none; }
   .js [data-veil] { opacity: 0; }
 }
 

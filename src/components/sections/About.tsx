@@ -1,13 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { EASE, DUR, STAGGER, prefersReducedMotion } from "@/lib/motion/tokens";
-
-// Module scope, guarded: child effects run before their ancestors', so
-// registering inside an effect is already too late for a child's ScrollTrigger.
-if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
+import { useRef } from "react";
+import { useSectionReveal } from "@/lib/motion/useSectionReveal";
 
 const BODY = "var(--font-body), system-ui, sans-serif";
 const DISPLAY = "var(--font-display), system-ui, sans-serif";
@@ -21,21 +15,7 @@ const DISPLAY = "var(--font-display), system-ui, sans-serif";
 export default function About() {
   const root = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (prefersReducedMotion()) return; // content is visible by default
-    const ctx = gsap.context(() => {
-      gsap.set("[data-reveal]", { opacity: 0, y: 14 });
-      gsap.to("[data-reveal]", {
-        opacity: 1,
-        y: 0,
-        duration: DUR.m,
-        ease: EASE.enter,
-        stagger: STAGGER * 2,
-        scrollTrigger: { trigger: root.current, start: "top 70%" },
-      });
-    }, root);
-    return () => ctx.revert();
-  }, []);
+  useSectionReveal(root);
 
   return (
     <div ref={root}>

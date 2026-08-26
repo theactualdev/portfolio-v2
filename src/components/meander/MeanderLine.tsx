@@ -122,6 +122,9 @@ export default function MeanderLine({ sections = "[data-meander-section]", jog =
       }
 
       el.style.strokeDashoffset = `${len}`;
+      // Clear a head parked by a previous reduced-motion build: the fresh
+      // trigger starts at progress 0, so onUpdate never fires to move it.
+      if (head.current) head.current.style.opacity = "0";
       trigger?.kill();
       const obj = { p: 0 };
       trigger = ScrollTrigger.create({

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import gsap from "gsap";
 import { qaRegister } from "@/components/dev/QaHooks";
-import { EASE, DUR, STAGGER, prefersReducedMotion } from "@/lib/motion/tokens";
+import { EASE, DUR, STAGGER } from "@/lib/motion/tokens";
 import { surfaceDriver, REST_AMP } from "@/components/surface/surfaceDriver";
 
 /**
@@ -24,58 +24,104 @@ const DISPLAY = "var(--font-display), system-ui, sans-serif";
 
 export default function Hero() {
   useEffect(() => {
-    if (prefersReducedMotion()) {
-      // The composed end state, immediately. The gating CSS already shows the
-      // lines and hides the veil; all that is missing is the field's rest
-      // amplitude, since no timeline runs to ramp it.
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let ctx: gsap.Context | undefined;
+    let cancelWait: (() => void) | undefined;
+
+    // The composed end state, written INLINE. The gating CSS only hands this
+    // out through a media query, so a visitor who turns reduced motion off
+    // mid-session had `.js [data-line] { opacity: 0 }` reassert with no
+    // timeline left to undo it — a permanently blank hero behind an opaque
+    // veil, recoverable only by reloading.
+    const compose = () => {
+      gsap.set("[data-line]", { opacity: 1, y: 0 });
+      gsap.set("[data-veil]", { opacity: 0 });
       surfaceDriver.amp = REST_AMP;
-      return;
-    }
+    };
 
-    // Deliberately UNSCOPED. [data-veil] and [data-line] are document-wide:
-    // the header marks arrive on the same stagger as the hero's lines, and
-    // they live outside this component.
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: EASE.enter } });
+    const ceremony = () => {
+      ctx = gsap.context(() => {
+        const tl = gsap.timeline({ defaults: { ease: EASE.enter } });
 
-      // The field wakes: veil lifts and turbulence breathes in, together.
-      tl.to("[data-veil]", { opacity: 0, duration: DUR.l, ease: EASE.move }, 0);
-      // Written straight onto the driver object, which the R3F frame loop
-      // reads. The prototype pushed this through setState — a React render per
-      // frame, 60 times a second. This costs zero renders.
-      tl.to(surfaceDriver, { amp: REST_AMP, duration: DUR.l, ease: EASE.move }, 0);
+        // The field wakes: veil lifts and turbulence breathes in, together.
+        tl.to("[data-veil]", { opacity: 0, duration: DUR.l, ease: EASE.move }, 0);
+        // Written straight onto the driver object, which the R3F frame loop
+        // reads. The prototype pushed this through setState — a React render
+        // per frame, 60 times a second. This costs zero renders.
+        tl.to(surfaceDriver, { amp: REST_AMP, duration: DUR.l, ease: EASE.move }, 0);
 
-      // The name arrives small while the material is already alive.
-      tl.to("[data-line]", { opacity: 1, y: 0, duration: DUR.m, stagger: STAGGER * 2 }, 0.35);
+        // The name arrives small while the material is already alive.
+        tl.to("[data-line]", { opacity: 1, y: 0, duration: DUR.m, stagger: STAGGER * 2 }, 0.35);
 
-      const unregister = qaRegister(tl);
+        const unregister = qaRegister(tl);
 
-      // Any sign of intent jumps straight to the composed end state.
-      const skip = () => tl.progress(1);
-      window.addEventListener("wheel", skip, { once: true, passive: true });
-      window.addEventListener("pointerdown", skip, { once: true });
-      window.addEventListener("keydown", skip, { once: true });
+        // Any sign of intent jumps straight to the composed end state.
+        const skip = () => tl.progress(1);
+        window.addEventListener("wheel", skip, { once: true, passive: true });
+        window.addEventListener("pointerdown", skip, { once: true });
+        window.addEventListener("keydown", skip, { once: true });
 
-      return () => {
-        unregister();
-        window.removeEventListener("wheel", skip);
-        window.removeEventListener("pointerdown", skip);
-        window.removeEventListener("keydown", skip);
+        return () => {
+          unregister();
+          window.removeEventListener("wheel", skip);
+          window.removeEventListener("pointerdown", skip);
+          window.removeEventListener("keydown", skip);
+        };
+      });
+    };
+
+    /**
+     * Wait for the surface before waking it.
+     *
+     * The ceremony IS the field waking, but the surface ships in a lazy chunk
+     * that only starts fetching after hydration. Off localhost the amplitude
+     * ramp was most of the way through before a canvas existed, so the one
+     * gesture the whole site is judged on played against a static gradient.
+     * Cap the wait — a slow chunk must never hold the page hostage.
+     */
+    const whenSurfaceReady = (go: () => void) => {
+      if (document.querySelector("canvas")) return go();
+      let timer = 0;
+      const done = () => {
+        obs.disconnect();
+        window.clearTimeout(timer);
+        cancelWait = undefined;
       };
-    });
+      const obs = new MutationObserver(() => {
+        if (document.querySelector("canvas")) { done(); go(); }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+      timer = window.setTimeout(() => { done(); go(); }, 1500);
+      cancelWait = done;
+    };
 
-    // NOTE: revert() rolls the surfaceDriver tween back to its start, so amp
-    // returns to 0 on unmount. Correct under React's development double-effect
-    // (the remount's timeline ramps it back up), and moot in production — this
-    // is a single page and the hero never unmounts.
-    return () => ctx.revert();
+    const build = () => {
+      cancelWait?.();
+      ctx?.revert();
+      ctx = undefined;
+      if (mq.matches) compose();
+      else whenSurfaceReady(ceremony);
+    };
+
+    build();
+    mq.addEventListener("change", build);
+
+    return () => {
+      mq.removeEventListener("change", build);
+      cancelWait?.();
+      // revert() rolls the surfaceDriver tween back to its start, so amp
+      // returns to 0 on unmount. Correct under React's development
+      // double-effect, and moot in production — this is a single page and the
+      // hero never unmounts.
+      ctx?.revert();
+    };
   }, []);
 
   return (
     <div>
       <p
         data-line
-        className="text-[0.72rem] uppercase tracking-[0.35em] text-ink-muted"
+        className="text-[0.72rem] uppercase tracking-[0.2em] text-ink-muted sm:tracking-[0.35em]"
         style={{ fontFamily: BODY }}
       >
         Ayodele Olayinka&ensp;·&ensp;Frontend Engineer

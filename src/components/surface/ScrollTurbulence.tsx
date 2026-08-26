@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import gsap from "gsap";
-import { prefersReducedMotion } from "@/lib/motion/tokens";
 import { surfaceDriver, REST_AMP } from "@/components/surface/surfaceDriver";
 
 /**
@@ -20,7 +19,8 @@ import { surfaceDriver, REST_AMP } from "@/components/surface/surfaceDriver";
  */
 export default function ScrollTurbulence() {
   useEffect(() => {
-    if (prefersReducedMotion()) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let running = false;
 
     let lastY = window.scrollY;
     let fallbackVel = 0;
@@ -28,8 +28,6 @@ export default function ScrollTurbulence() {
       fallbackVel = window.scrollY - lastY;
       lastY = window.scrollY;
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-
     const tick = () => {
       const v = window.__lenis
         ? (window.__lenis as unknown as { velocity: number }).velocity
@@ -39,11 +37,29 @@ export default function ScrollTurbulence() {
       // Ease toward the target so churn builds and settles rather than snapping.
       surfaceDriver.amp += (target - surfaceDriver.amp) * 0.08;
     };
-    gsap.ticker.add(tick);
+    const start = () => {
+      if (running) return;
+      running = true;
+      lastY = window.scrollY;
+      fallbackVel = 0;
+      window.addEventListener("scroll", onScroll, { passive: true });
+      gsap.ticker.add(tick);
+    };
 
-    return () => {
+    const stop = () => {
+      if (!running) return;
+      running = false;
       gsap.ticker.remove(tick);
       window.removeEventListener("scroll", onScroll);
+    };
+
+    const sync = () => (mq.matches ? stop() : start());
+    sync();
+    mq.addEventListener("change", sync);
+
+    return () => {
+      mq.removeEventListener("change", sync);
+      stop();
     };
   }, []);
 

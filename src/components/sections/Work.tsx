@@ -1,11 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { EASE, DUR, STAGGER, prefersReducedMotion } from "@/lib/motion/tokens";
-
-if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
+import { useRef } from "react";
+import { STAGGER } from "@/lib/motion/tokens";
+import { useSectionReveal } from "@/lib/motion/useSectionReveal";
 
 const BODY = "var(--font-body), system-ui, sans-serif";
 const DISPLAY = "var(--font-display), system-ui, sans-serif";
@@ -26,21 +23,7 @@ const WORK = [
 export default function Work() {
   const root = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (prefersReducedMotion()) return;
-    const ctx = gsap.context(() => {
-      gsap.set("[data-reveal]", { opacity: 0, y: 14 });
-      gsap.to("[data-reveal]", {
-        opacity: 1,
-        y: 0,
-        duration: DUR.m,
-        ease: EASE.enter,
-        stagger: STAGGER,
-        scrollTrigger: { trigger: root.current, start: "top 70%" },
-      });
-    }, root);
-    return () => ctx.revert();
-  }, []);
+  useSectionReveal(root, STAGGER);
 
   return (
     <div ref={root}>
@@ -54,7 +37,7 @@ export default function Work() {
       <ul className="mt-8 max-w-[56ch]">
         {WORK.map((w) => (
           <li key={w.n} data-reveal className="border-t border-ink/10 last:border-b">
-            <div className="flex items-baseline gap-6 py-5" style={{ fontFamily: BODY }}>
+            <div className="flex items-baseline gap-4 py-5 sm:gap-6" style={{ fontFamily: BODY }}>
               <span className="text-[0.7rem] tracking-[0.25em] text-ink-muted">{w.n}</span>
               <a
                 href={w.live}
@@ -63,12 +46,16 @@ export default function Work() {
                 className="group flex-1 no-underline"
               >
                 <span
-                  className="inline-block transition-transform duration-300 group-hover:translate-x-2"
+                  className="inline-block motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:translate-x-2"
                   style={{ fontFamily: DISPLAY, fontWeight: 600, fontStretch: "110%", fontSize: "1.2rem" }}
                 >
                   {w.name}
                 </span>
-                <span className="ml-4 hidden text-[0.8rem] text-ink-muted sm:inline">{w.note}</span>
+                {/* Was `hidden sm:inline`, which removed it from the a11y
+                    tree too — a phone visitor got five bare names. */}
+                <span className="mt-1 block text-[0.75rem] leading-snug text-ink-muted sm:mt-0 sm:ml-4 sm:inline">
+                  {w.note}
+                </span>
               </a>
               <a
                 href={w.code}

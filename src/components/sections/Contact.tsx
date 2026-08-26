@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { EASE, DUR, STAGGER, prefersReducedMotion } from "@/lib/motion/tokens";
+import { useSectionReveal } from "@/lib/motion/useSectionReveal";
 import { surfaceDriver } from "@/components/surface/surfaceDriver";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
@@ -40,21 +40,11 @@ export default function Contact() {
           surfaceDriver.hue = self.progress * 0.85;
         },
       });
-
-      if (!prefersReducedMotion()) {
-        gsap.set("[data-reveal]", { opacity: 0, y: 14 });
-        gsap.to("[data-reveal]", {
-          opacity: 1,
-          y: 0,
-          duration: DUR.m,
-          ease: EASE.enter,
-          stagger: STAGGER * 2,
-          scrollTrigger: { trigger: root.current, start: "top 70%" },
-        });
-      }
     }, root);
     return () => ctx.revert();
   }, []);
+
+  useSectionReveal(root);
 
   return (
     <div ref={root} data-meander-end>
@@ -99,7 +89,7 @@ export default function Contact() {
       </div>
       <p
         data-reveal
-        className="mt-16 text-[0.62rem] uppercase tracking-[0.3em] text-ink/60"
+        className="mt-16 text-[0.62rem] uppercase tracking-[0.3em] text-ink-muted"
         style={{ fontFamily: BODY }}
       >
         © 2026 theactualdev

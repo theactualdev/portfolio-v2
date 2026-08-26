@@ -2,6 +2,7 @@
 
 import SurfaceLazy from "@/components/surface/SurfaceLazy";
 import GreekCursor from "@/components/cursor/GreekCursor";
+import Header from "@/components/chrome/Header";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
 import Work from "@/components/sections/Work";
@@ -27,28 +28,27 @@ export default function Home() {
           lines animate in FRONT of the veil rather than filtered through it. */}
       <div data-veil className="fixed inset-0 z-[6] bg-ground pointer-events-none" />
 
-      {/* Tracking and size step down below sm: at 0.35em the two marks
-          collided at 360px (7px apart, reading as one run-on string) and
-          wrapped at 320px, the WCAG reflow width. */}
-      <header className="fixed inset-x-0 top-0 z-20 flex items-baseline justify-between gap-3 px-[6vw] py-6 text-[0.6rem] uppercase tracking-[0.18em] text-ink-muted sm:text-[0.68rem] sm:tracking-[0.35em]" style={{ fontFamily: "var(--font-body)" }}>
-        <span data-line>theactualdev</span>
-        <span data-line>Available for work</span>
-      </header>
+      <Header />
 
-      {/* tabIndex=-1 so activating the skip link MOVES FOCUS, not just
-          scroll. Inert today (main is empty and unnamed), but Tasks 5-7 put
-          ~15 focusables behind this link and the fix is free now. */}
+      {/* tabIndex=-1 so activating the skip link MOVES FOCUS rather than only
+          scrolling — there are 15 focusables behind it.
+
+          Sections reserve the spine's lane at EVERY width. The reserving
+          padding used to be md:-only while MeanderLine derives both lanes from
+          vw unconditionally, so below 768px the hairline drew straight through
+          the About and Contact copy and the amber terminus parked on the email
+          link's underline. Both now come from the same expression. */}
       <main id="main" tabIndex={-1} className="relative z-10">
-        <section id="hero" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+        <section id="hero" data-meander-section className="flex min-h-screen flex-col justify-center pr-[7vw] pl-[calc(6vw+min(56px,9vw)+18px)]">
           <Hero />
         </section>
-        <section id="about" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+        <section id="about" data-meander-section className="flex min-h-screen flex-col justify-center pr-[7vw] pl-[calc(6vw+min(56px,9vw)+18px)]">
           <About />
         </section>
-        <section id="work" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+        <section id="work" data-meander-section className="flex min-h-screen flex-col justify-center pr-[7vw] pl-[calc(6vw+min(56px,9vw)+18px)]">
           <Work />
         </section>
-        <section id="contact" data-meander-section className="flex min-h-screen flex-col justify-center px-[7vw] md:pl-[calc(6vw+96px)]">
+        <section id="contact" data-meander-section className="flex min-h-screen flex-col justify-center pr-[7vw] pl-[calc(6vw+min(56px,9vw)+18px)]">
           <Contact />
         </section>
       </main>
