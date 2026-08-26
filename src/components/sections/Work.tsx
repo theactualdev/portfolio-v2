@@ -46,15 +46,19 @@ export default function Work() {
                 rel="noopener noreferrer"
                 className="group flex-1 no-underline"
               >
+                {/* Fixed width from sm up so the notes form a column. They
+                    followed the name inline, which put their left edges at
+                    five different x positions — a 100px spread, the only
+                    ragged column on the page. */}
                 <span
-                  className="inline-block motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:translate-x-2"
+                  className="inline-block motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:translate-x-2 sm:w-44"
                   style={{ fontFamily: DISPLAY, fontWeight: 600, fontStretch: "110%", fontSize: "1.2rem" }}
                 >
                   {w.name}
                 </span>
                 {/* Was `hidden sm:inline`, which removed it from the a11y
                     tree too — a phone visitor got five bare names. */}
-                <span className="mt-1 block text-[0.75rem] leading-snug text-ink-muted sm:mt-0 sm:ml-4 sm:inline">
+                <span className="mt-1 block text-[0.75rem] leading-snug text-ink-muted sm:mt-0 sm:inline">
                   {w.note}
                 </span>
               </a>

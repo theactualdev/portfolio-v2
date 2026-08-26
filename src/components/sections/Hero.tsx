@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import gsap from "gsap";
 import { qaRegister } from "@/components/dev/QaHooks";
 import { EASE, DUR, STAGGER } from "@/lib/motion/tokens";
-import { surfaceDriver, REST_AMP, releaseAmp } from "@/components/surface/surfaceDriver";
+import { surfaceDriver, REST_AMP, releaseAmp, onSurfaceLive } from "@/components/surface/surfaceDriver";
 
 /**
  * The entry ceremony. THE SURFACE IS THE HERO.
@@ -100,25 +100,29 @@ export default function Hero() {
     /**
      * Wait for the surface before waking it.
      *
-     * The ceremony IS the field waking, but the surface ships in a lazy chunk
-     * that only starts fetching after hydration. Off localhost the amplitude
-     * ramp was most of the way through before a canvas existed, so the one
-     * gesture the whole site is judged on played against a static gradient.
-     * Cap the wait — a slow chunk must never hold the page hostage.
+     * The ceremony IS the field waking, so the breath must start when the
+     * field first PAINTS — not when React inserts a <canvas>, which R3F does
+     * at its default 300x150 roughly two seconds before it draws anything.
+     * Waiting on the element ran the entire breath against a blank frame.
      */
     const whenSurfaceReady = (go: () => void) => {
-      if (document.querySelector("canvas")) return go();
       let timer = 0;
+      let fired = false;
       const done = () => {
-        obs.disconnect();
         window.clearTimeout(timer);
+        off();
         cancelWait = undefined;
       };
-      const obs = new MutationObserver(() => {
-        if (document.querySelector("canvas")) { done(); go(); }
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-      timer = window.setTimeout(() => { done(); go(); }, 1500);
+      const run = () => {
+        if (fired) return;
+        fired = true;
+        done();
+        go();
+      };
+      const off = onSurfaceLive(run);
+      // Cap: a slow chunk, or a machine with no WebGL at all, must never hold
+      // the ceremony hostage. There is simply no field to wake in that case.
+      timer = window.setTimeout(run, 1500);
       cancelWait = done;
     };
 
@@ -151,7 +155,12 @@ export default function Hero() {
         className="text-[0.72rem] uppercase tracking-[0.2em] text-ink-muted sm:tracking-[0.35em]"
         style={{ fontFamily: BODY }}
       >
-        Ayodele Olayinka&ensp;·&ensp;Frontend Engineer
+        {/* Below sm this stacks without the separator rather than wrapping
+            mid-phrase — at 390px it orphaned "ENGINEER", at 320px it left the
+            middot dangling at the end of a line. */}
+        <span className="block whitespace-nowrap sm:inline">Ayodele Olayinka</span>
+        <span className="hidden sm:inline">&ensp;·&ensp;</span>
+        <span className="block whitespace-nowrap sm:inline">Frontend Engineer</span>
       </p>
 
       <h1

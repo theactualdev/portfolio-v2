@@ -16,7 +16,16 @@ void main() {
  * refractive lens under the pointer and a warm specular glint trailing it.
  *
  * Knobs (all driven from SurfaceCanvas):
- *   uAmp       0..1  turbulence — scroll-driven. 0 = nearly still, 1 = churning.
+ *   uAmp       0..1  turbulence. Two jobs, split at REST_AMP:
+ *                    below it, amplitude is PRESENCE — the field materialises
+ *                    out of the ground, which is what the entry ceremony's
+ *                    "the field wakes" actually means;
+ *                    at and above it, presence is saturated and amplitude only
+ *                    drives the domain warp, i.e. scroll churn.
+ *                    It used to feed the warp alone, so the field was fully
+ *                    present at amp 0 and the ceremony morphed a visible field
+ *                    instead of waking one: measured, the first drawn frame
+ *                    was already at 96% of its settled contrast.
  *   uHue       0..1  warmth — 0 the resting ground, 1 the amber footer finale.
  *                    (The ground is very slightly cool by design; "neutral" here
  *                    means "no amber applied", not "R==G==B".)
@@ -106,6 +115,14 @@ void main(){
   col += amber * spec * (0.55 + 0.45*uHue);
   // faint cool rim just outside the lens, so the bite has an edge
   col += vec3(0.10, 0.11, 0.13) * pow(max(lens - 0.25, 0.0), 2.0) * 0.5;
+
+  // --- presence: the wake ---
+  // Saturates exactly at REST_AMP so the approved resting look is untouched and
+  // scroll churn above rest changes only the warp. Must match REST_AMP in
+  // surfaceDriver.ts.
+  const float REST_AMP = 0.28;
+  float presence = smoothstep(0.0, REST_AMP, uAmp);
+  col = mix(deep, col, presence);
 
   // --- vignette, generous so it never reads as a ring ---
   float vig = 1.0 - smoothstep(0.55, 1.60, length((uv-0.5)*asp*1.7));

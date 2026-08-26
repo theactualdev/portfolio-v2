@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import * as THREE from "three";
 import { surfaceVert, surfaceFrag } from "./surface.glsl";
+import { markSurfaceLive } from "./surfaceDriver";
 
 type Props = {
   amplitude?: number;
@@ -108,6 +109,8 @@ function SurfacePlane({
   useFrame((state, delta) => {
     const u = mat.current?.uniforms as SurfaceUniforms | undefined;
     if (!u) return;
+    // First frame with a real material: the field is on screen from here.
+    markSurfaceLive();
     // Read the mutable channel fresh every frame — that is the whole point of
     // it. Props remain the fallback for the spike route and for any consumer
     // that has nothing to choreograph.

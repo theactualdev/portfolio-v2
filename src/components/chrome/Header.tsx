@@ -29,11 +29,15 @@ export default function Header() {
 
     let frame = 0;
     let last = -1;
+    // Cached, because reading scrollHeight in the scroll path forces a
+    // synchronous layout — on exactly the frames where GSAP has just written
+    // the meander's dash offset, so the document is dirty. It only changes on
+    // resize, which recomputes it below.
+    let max = document.documentElement.scrollHeight - window.innerHeight;
 
     const apply = () => {
       frame = 0;
       const vh = window.innerHeight;
-      const max = document.documentElement.scrollHeight - vh;
       const y = window.scrollY;
       // Ramps are deliberately tight. Gentler ones left the marks at 0.75
       // opacity exactly where copy reaches the header band — measured, 2-4
@@ -53,14 +57,18 @@ export default function Header() {
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(apply);
     };
+    const onResize = () => {
+      max = document.documentElement.scrollHeight - window.innerHeight;
+      onScroll();
+    };
 
     apply();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
     return () => {
       if (frame) cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
