@@ -37,7 +37,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.documentElement.classList.add("js")`,
+            /**
+             * The `js` class hides every gated element so the ceremony can
+             * reveal them. That is fail-DEADLY on its own: if the bundle never
+             * executes — a syntax error on an older engine, a chunk that never
+             * arrives, a throw during hydration — nothing ever un-hides it and
+             * the visitor gets a permanently blank page. Which is exactly what
+             * happened on a real iPhone.
+             *
+             * So the same script that hides the content also promises to give
+             * it back. At 4s (the ceremony is 1.65s) it checks whether the veil
+             * actually lifted; if it did not, it hands everything over to CSS.
+             * This runs before any of our other JavaScript and depends on none
+             * of it.
+             */
+            __html:
+              'document.documentElement.classList.add("js");' +
+              'setTimeout(function(){' +
+              'var v=document.querySelector("[data-veil]");' +
+              'if(!v||getComputedStyle(v).opacity!=="0"){' +
+              'document.documentElement.classList.add("ceremony-stalled");}' +
+              '},4000);',
           }}
         />
       </head>

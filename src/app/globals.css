@@ -96,6 +96,14 @@ body { font-family: var(--font-body), system-ui, sans-serif; }
    vanish, then fade back in. That is precisely the flash this mechanism exists
    to prevent, and [data-line] was the only attribute protected from it. */
 .js [data-reveal] { opacity: 0; transform: translateY(14px); }
+
+/* The dead man's switch. Set by the inline head script when the veil has not
+   lifted 4s in — i.e. the ceremony never ran at all. Everything the gating
+   hid comes back, unconditionally. A page that fails to animate is a minor
+   disappointment; a page that stays blank is not a page. */
+.js.ceremony-stalled [data-line],
+.js.ceremony-stalled [data-reveal] { opacity: 1 !important; transform: none !important; }
+.js.ceremony-stalled [data-veil] { opacity: 0 !important; }
 [data-veil] { opacity: 0; }
 .js [data-veil] { opacity: 1; }
 
