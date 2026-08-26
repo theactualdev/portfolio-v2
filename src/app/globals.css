@@ -105,6 +105,33 @@ body { font-family: var(--font-body), system-ui, sans-serif; }
   .js [data-veil] { opacity: 0; }
 }
 
+/* --- marquee ---------------------------------------------------------------
+   -50% of a strip that contains exactly two copies of its content lands on the
+   start of the second copy, which is pixel-identical to the start of the first.
+   That is what makes the loop seamless for any number of items. */
+@keyframes marquee-ltr {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marquee-rtl {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+/* A marquee you cannot read is decoration. Point at it and it stops.
+   Written here rather than as a Tailwind arbitrary variant because the
+   generated `group-hover:[animation-play-state:paused]` did not take — verified
+   by measuring the transform before and after a real hover. */
+[data-marquee] [data-dir="ltr"] { animation: marquee-ltr var(--marquee-duration) linear infinite; }
+[data-marquee] [data-dir="rtl"] { animation: marquee-rtl var(--marquee-duration) linear infinite; }
+[data-marquee]:hover [data-dir],
+[data-marquee]:focus-within [data-dir] { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Belt and braces alongside the utility on the element: under reduce the
+     strip must be a static wrapped list, never a frozen slice of a loop. */
+  [data-marquee] * { animation: none !important; transform: none !important; }
+}
+
 /* --- screen-reader-only ---------------------------------------------------
    For headings that must exist in the document outline without appearing in
    the composition. clip-path over clip: the latter is deprecated and drops

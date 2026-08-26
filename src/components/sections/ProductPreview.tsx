@@ -42,6 +42,10 @@ export default function ProductPreview({
           // All five render, so the first hover has nothing to wait for. They
           // are 21KB total at 1x and lazy, so they cost nothing until the
           // section is near the viewport.
+          // eslint-disable-next-line @next/next/no-img-element -- These are
+          // pre-sized, pre-encoded WebP at exactly 1x/2x, lazy, and far below
+          // the fold; next/image would re-optimise already-optimised bytes and
+          // add a loader for no gain. They are never the LCP element.
           <img
             key={s}
             src={`/previews/${s}.webp`}
