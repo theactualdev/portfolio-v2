@@ -43,20 +43,36 @@ export default function Hero() {
       ctx = gsap.context(() => {
         const tl = gsap.timeline({ defaults: { ease: EASE.enter } });
 
-        // The field wakes: veil lifts and turbulence breathes in, together.
+        // The veil lifts, and the name arrives small over it.
         tl.to("[data-veil]", { opacity: 0, duration: DUR.l, ease: EASE.move }, 0);
-        // Written straight onto the driver object, which the R3F frame loop
-        // reads. The prototype pushed this through setState — a React render
-        // per frame, 60 times a second. This costs zero renders.
-        tl.to(surfaceDriver, { amp: REST_AMP, duration: DUR.l, ease: EASE.move }, 0);
-
-        // The name arrives small while the material is already alive.
         tl.to("[data-line]", { opacity: 1, y: 0, duration: DUR.m, stagger: STAGGER * 2 }, 0.35);
+
+        /**
+         * The field's breath is a SEPARATE tween, started when the surface
+         * arrives — never blocking the type on it.
+         *
+         * Gating the whole ceremony on the lazy WebGL chunk made the hero h1
+         * the LCP element at 2828ms under 4x CPU throttle, against a 2.5s
+         * budget: the canvas only appeared at 2102ms and the lines waited
+         * behind it. Text now paints on schedule (FCP 396ms) and the material
+         * still breathes in from zero whenever it lands.
+         *
+         * Written straight onto the driver object, which the R3F frame loop
+         * reads. The prototype pushed this through setState — a React render
+         * per frame, 60 times a second. This costs zero renders.
+         */
+        const breathe = () =>
+          gsap.to(surfaceDriver, { amp: REST_AMP, duration: DUR.l, ease: EASE.move });
+        whenSurfaceReady(breathe);
 
         const unregister = qaRegister(tl);
 
         // Any sign of intent jumps straight to the composed end state.
-        const skip = () => tl.progress(1);
+        const skip = () => {
+          tl.progress(1);
+          cancelWait?.();
+          gsap.to(surfaceDriver, { amp: REST_AMP, duration: DUR.s, ease: EASE.move });
+        };
         window.addEventListener("wheel", skip, { once: true, passive: true });
         window.addEventListener("pointerdown", skip, { once: true });
         window.addEventListener("keydown", skip, { once: true });
@@ -100,7 +116,7 @@ export default function Hero() {
       ctx?.revert();
       ctx = undefined;
       if (mq.matches) compose();
-      else whenSurfaceReady(ceremony);
+      else ceremony();
     };
 
     build();
