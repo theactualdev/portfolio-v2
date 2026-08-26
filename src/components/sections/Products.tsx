@@ -7,6 +7,9 @@ import { useSectionReveal } from "@/lib/motion/useSectionReveal";
 const BODY = "var(--font-body), system-ui, sans-serif";
 const DISPLAY = "var(--font-display), system-ui, sans-serif";
 
+/** `code` is optional: not every product has a repo that is ours to point at. */
+type Product = { n: string; name: string; note: string; live: string; code?: string };
+
 /**
  * Things built, each row a link out. The locked answer to "what happens when
  * someone clicks a project" is: they go to the live thing or to the code —
@@ -16,12 +19,12 @@ const DISPLAY = "var(--font-display), system-ui, sans-serif";
  * it is the job AND the strongest thing shipped. MSE LUX says "for a client"
  * because it was, and that is a credential rather than a caveat.
  */
-const PRODUCTS = [
-  { n: "01", name: "Nevo", note: "Adaptive learning platform — founding engineer", live: "https://nevolearning.com", code: "https://github.com/teslimsadiqnevo/nevo-frontend-2.0" },
-  { n: "02", name: "MSE LUX", note: "E-commerce for a client — Paystack, Prisma, Next.js", live: "https://mse-lux-seven.vercel.app", code: "https://github.com/theactualdev/MSE-LUX" },
-  { n: "03", name: "Bleachers", note: "Event-sourced sports PWA — NestJS, offline-first", live: "https://bleachers-lovat.vercel.app", code: "https://github.com/theactualdev/bleachers" },
-  { n: "04", name: "GPA Calculator", note: "Vite, React, TypeScript", live: "https://theactual-gpa.vercel.app", code: "https://github.com/theactualdev/theactualGPA" },
-  { n: "05", name: "FaceBlur", note: "In-browser AI face blurring", live: "https://faceblur-v3.vercel.app", code: "https://github.com/theactualdev/faceblur" },
+const PRODUCTS: Product[] = [
+  { n: "01", name: "Nevo", note: "Adaptive learning platform — mobile-first, code-split, in school pilots", live: "https://nevolearning.com" },
+  { n: "02", name: "MSE LUX", note: "Client e-commerce — Paystack checkout, Prisma, Next.js", live: "https://mse-lux-seven.vercel.app", code: "https://github.com/theactualdev/MSE-LUX" },
+  { n: "03", name: "Bleachers", note: "Sports PWA — event-sourced NestJS, offline-first", live: "https://bleachers-lovat.vercel.app", code: "https://github.com/theactualdev/bleachers" },
+  { n: "04", name: "GPA Calculator", note: "Instant GPA computation, entirely client-side", live: "https://theactual-gpa.vercel.app", code: "https://github.com/theactualdev/theactualGPA" },
+  { n: "05", name: "FaceBlur", note: "OpenCV.js face detection — images never leave the device", live: "https://faceblur-v3.vercel.app", code: "https://github.com/theactualdev/faceblur" },
 ];
 
 export default function Products() {
@@ -66,14 +69,16 @@ export default function Products() {
                   {w.note}
                 </span>
               </a>
-              <a
-                href={w.code}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[0.72rem] uppercase tracking-[0.2em] text-ink-muted underline-offset-4 hover:text-accent hover:underline"
-              >
-                Code
-              </a>
+              {w.code && (
+                <a
+                  href={w.code}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[0.72rem] uppercase tracking-[0.2em] text-ink-muted underline-offset-4 hover:text-accent hover:underline"
+                >
+                  Code
+                </a>
+              )}
             </div>
           </li>
         ))}

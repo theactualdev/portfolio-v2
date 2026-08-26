@@ -37,15 +37,16 @@ export default function About() {
           fontSize: "clamp(1.4rem, 2.4vw, 2.1rem)",
         }}
       >
-        Four years turning specifications into interfaces people actually finish using.
+        Shipping since 2023.
       </p>
       <p
         data-reveal
         className="mt-6 max-w-[46ch] text-[1rem] leading-relaxed text-ink-muted"
         style={{ fontFamily: BODY }}
       >
-        Most recently at Nevo, building an adaptive learning platform from the
-        first commit. Before that, e-commerce and event-sourced systems.
+        Founding frontend engineer at Nevo, building an adaptive learning
+        platform from the first commit — while finishing a Computer Science
+        degree at the University of Lagos.
       </p>
     </div>
   );

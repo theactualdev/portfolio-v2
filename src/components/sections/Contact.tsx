@@ -76,6 +76,16 @@ export default function Contact() {
       >
         olayinkacodes@gmail.com
       </a>
+      <a
+        data-reveal
+        href="/ayodele-olayinka-resume.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 block w-fit text-[0.8rem] text-ink-muted underline underline-offset-8 hover:text-accent"
+        style={{ fontFamily: BODY }}
+      >
+        Résumé (PDF)
+      </a>
       <div
         data-reveal
         className="mt-10 flex gap-8 text-[0.72rem] uppercase tracking-[0.25em] text-ink-muted"
