@@ -5,7 +5,8 @@ import GreekCursor from "@/components/cursor/GreekCursor";
 import Header from "@/components/chrome/Header";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
-import Work from "@/components/sections/Work";
+import Roles from "@/components/sections/Roles";
+import Products from "@/components/sections/Products";
 import Contact from "@/components/sections/Contact";
 import ScrollTurbulence from "@/components/surface/ScrollTurbulence";
 import MeanderLine from "@/components/meander/MeanderLine";
@@ -46,7 +47,10 @@ export default function Home() {
           <About />
         </section>
         <section id="work" data-meander-section className="flex min-h-screen flex-col justify-center pr-[7vw] pl-[calc(6vw+min(56px,9vw)+18px)]">
-          <Work />
+          <Roles />
+        </section>
+        <section id="products" data-meander-section className="flex min-h-screen flex-col justify-center pr-[7vw] pl-[calc(6vw+min(56px,9vw)+18px)]">
+          <Products />
         </section>
         <section id="contact" data-meander-section className="flex min-h-screen flex-col justify-center pr-[7vw] pl-[calc(6vw+min(56px,9vw)+18px)]">
           <Contact />

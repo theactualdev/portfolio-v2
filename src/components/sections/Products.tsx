@@ -8,35 +8,39 @@ const BODY = "var(--font-body), system-ui, sans-serif";
 const DISPLAY = "var(--font-display), system-ui, sans-serif";
 
 /**
- * Five rows, each a link out. The locked answer to "what happens when someone
- * clicks a project" is: they go to the live thing or to the code — there are
- * no invented case-study routes behind these.
+ * Things built, each row a link out. The locked answer to "what happens when
+ * someone clicks a project" is: they go to the live thing or to the code —
+ * there are no invented case-study routes behind these.
+ *
+ * Separate from Roles, which lists employment. Nevo appears in both, honestly:
+ * it is the job AND the strongest thing shipped. MSE LUX says "for a client"
+ * because it was, and that is a credential rather than a caveat.
  */
-const WORK = [
+const PRODUCTS = [
   { n: "01", name: "Nevo", note: "Adaptive learning platform — founding engineer", live: "https://nevolearning.com", code: "https://github.com/teslimsadiqnevo/nevo-frontend-2.0" },
-  { n: "02", name: "MSE LUX", note: "E-commerce — Paystack, Prisma, Next.js", live: "https://mse-lux-seven.vercel.app", code: "https://github.com/theactualdev/MSE-LUX" },
+  { n: "02", name: "MSE LUX", note: "E-commerce for a client — Paystack, Prisma, Next.js", live: "https://mse-lux-seven.vercel.app", code: "https://github.com/theactualdev/MSE-LUX" },
   { n: "03", name: "Bleachers", note: "Event-sourced sports PWA — NestJS, offline-first", live: "https://bleachers-lovat.vercel.app", code: "https://github.com/theactualdev/bleachers" },
   { n: "04", name: "GPA Calculator", note: "Vite, React, TypeScript", live: "https://theactual-gpa.vercel.app", code: "https://github.com/theactualdev/theactualGPA" },
   { n: "05", name: "FaceBlur", note: "In-browser AI face blurring", live: "https://faceblur-v3.vercel.app", code: "https://github.com/theactualdev/faceblur" },
 ];
 
-export default function Work() {
+export default function Products() {
   const root = useRef<HTMLDivElement>(null);
 
   useSectionReveal(root, STAGGER);
 
   return (
     <div ref={root}>
-      <h2 className="sr-only">Selected work</h2>
+      <h2 className="sr-only">Products</h2>
       <p
         data-reveal
         className="text-[0.68rem] uppercase tracking-[0.35em] text-ink-muted"
         style={{ fontFamily: BODY }}
       >
-        Selected work
+        Products
       </p>
       <ul className="mt-8 max-w-[56ch]">
-        {WORK.map((w) => (
+        {PRODUCTS.map((w) => (
           <li key={w.n} data-reveal className="border-t border-ink/10 last:border-b">
             <div className="flex items-baseline gap-4 py-5 sm:gap-6" style={{ fontFamily: BODY }}>
               <span className="text-[0.7rem] tracking-[0.25em] text-ink-muted">{w.n}</span>
