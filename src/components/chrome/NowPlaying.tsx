@@ -2,16 +2,22 @@
 
 import { useEffect, useState } from "react";
 
-type Track = { track: string; artist: string; url: string };
+type Track = { track: string; artist: string; url: string; live: boolean };
 
 /**
- * A third mark in the masthead — and it exists ONLY while he is actually
- * playing something.
+ * A third mark in the masthead, carrying what he is playing — or, when nothing
+ * is playing, the last thing he played.
  *
- * That is the whole idea. The feature has no empty state, no "nothing playing"
- * placeholder, no greyed-out widget: when he is not listening, the header is
- * precisely the header that ships without this. Absence is the resting state,
- * so there is nothing to look broken.
+ * It began as live-only, so that absence was the resting state and there was no
+ * empty state to look broken. He asked for it to always show something, which
+ * is the better call for a page most people see once: live-only would have been
+ * blank for most visitors.
+ *
+ * The two states are distinguished honestly rather than being passed off as the
+ * same thing: a live track gets a solid tick, a past one a dimmer tick, and the
+ * accessible name says which it is. Showing a track he finished an hour ago as
+ * though he were listening right now would be a small lie the page does not
+ * need to tell.
  *
  * It is deliberately not a Spotify component. No green, no album art, no
  * equalizer bars — those would be a second brand on a page with exactly one
@@ -69,12 +75,15 @@ export default function NowPlaying() {
       href={now.url}
       target="_blank"
       rel="noopener noreferrer"
-      title={`${now.track} — ${now.artist}`}
+      title={`${now.live ? "Listening to" : "Last played"}: ${now.track} — ${now.artist}`}
       className="hidden items-baseline gap-2 whitespace-nowrap text-ink-muted transition-colors hover:text-ink sm:flex"
     >
       {/* The tick. One cream hairline, the same weight as the spine. */}
-      <span aria-hidden="true" className="inline-block h-[0.62em] w-px bg-ink/40" />
-      <span className="sr-only">Currently listening to </span>
+      <span
+        aria-hidden="true"
+        className={`inline-block h-[0.62em] w-px ${now.live ? "bg-ink/40" : "bg-ink/20"}`}
+      />
+      <span className="sr-only">{now.live ? "Currently listening to " : "Last played: "}</span>
       {/* Caps at 0.35em tracking are roughly twice as wide as a `ch`, so these
           limits are in rem. Measured with a punishing 61-character track name:
           no collision at 640-1920, and 684px still free at 1440. */}

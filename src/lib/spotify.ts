@@ -16,6 +16,7 @@ import "server-only";
 
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const NOW_URL = "https://api.spotify.com/v1/me/player/currently-playing";
+const RECENT_URL = "https://api.spotify.com/v1/me/player/recently-played?limit=1";
 
 type Cached = { token: string; expires: number };
 let cached: Cached | null = null;
@@ -68,9 +69,43 @@ async function accessToken(): Promise<string | null> {
   }
 }
 
-export type NowPlaying = { track: string; artist: string; url: string };
+export type NowPlaying = {
+  track: string;
+  artist: string;
+  url: string;
+  /** True while it is actually playing; false when this is the last thing he played. */
+  live: boolean;
+};
 
-/** What he is listening to this second, or null. Null is the normal case. */
+type SpotifyTrack = {
+  name?: string;
+  artists?: { name: string }[];
+  external_urls?: { spotify?: string };
+};
+
+const shape = (item: SpotifyTrack | null | undefined, live: boolean): NowPlaying | null =>
+  item?.name
+    ? {
+        track: item.name,
+        artist: item.artists?.[0]?.name ?? "",
+        // Spotify's terms require attribution linking back to the content.
+        url: item.external_urls?.spotify ?? "https://open.spotify.com",
+        live,
+      }
+    : null;
+
+/**
+ * What he is playing — or, when nothing is playing, the last thing he played.
+ *
+ * The mark used to exist only while a track was live, which made absence the
+ * resting state. He asked for it to always show something instead, so this
+ * falls back to recently-played. `live` distinguishes the two so the UI can be
+ * honest about which it is showing rather than implying he is listening right
+ * now when he is not.
+ *
+ * Still returns null on every failure: expired token, rate limit, network
+ * fault, or an account with no history at all.
+ */
 export async function getNowPlaying(): Promise<NowPlaying | null> {
   const token = await accessToken();
   if (!token) return null;
@@ -81,27 +116,27 @@ export async function getNowPlaying(): Promise<NowPlaying | null> {
       cache: "no-store",
     });
 
-    // 204 is Spotify's "nothing is playing". So is a 200 carrying is_playing
-    // false, which happens when a track is paused rather than stopped.
-    if (res.status === 204 || !res.ok) return null;
+    // 204 is Spotify's "nothing is playing". A 200 carrying is_playing false
+    // means paused, which counts as not playing for our purposes.
+    if (res.ok && res.status !== 204) {
+      const json = (await res.json()) as { is_playing?: boolean; item?: SpotifyTrack | null };
+      if (json.is_playing) {
+        const live = shape(json.item, true);
+        if (live) return live;
+      }
+    }
+  } catch {
+    // fall through to the last-played lookup
+  }
 
-    const json = (await res.json()) as {
-      is_playing?: boolean;
-      item?: {
-        name?: string;
-        artists?: { name: string }[];
-        external_urls?: { spotify?: string };
-      } | null;
-    };
-
-    if (!json.is_playing || !json.item?.name) return null;
-
-    return {
-      track: json.item.name,
-      artist: json.item.artists?.[0]?.name ?? "",
-      // Spotify's terms require attribution linking back to the content.
-      url: json.item.external_urls?.spotify ?? "https://open.spotify.com",
-    };
+  try {
+    const res = await fetch(RECENT_URL, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { items?: { track?: SpotifyTrack }[] };
+    return shape(json.items?.[0]?.track, false);
   } catch {
     return null;
   }
