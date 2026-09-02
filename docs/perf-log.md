@@ -101,12 +101,16 @@ Asserted by construction — `window.__qa` exposes no timeline registry read, so
 there is nothing to measure at runtime:
 
 ```
-max(DUR.l, 0.35 + (n-1)*(STAGGER*2) + DUR.m)   n = 6 document-wide [data-line]
-max(1.1, 0.35 + 5*0.12 + 0.7) = max(1.1, 1.65) = 1.65 s     gate: ≤ 3 s ✅
+max(DUR.l, 0.35 + (n-1)*(STAGGER*2) + DUR.m)   n = 5 document-wide [data-line]
+max(1.1, 0.35 + 4*0.12 + 0.7) = max(1.1, 1.53) = 1.53 s     gate: ≤ 3 s ✅
 ```
 
-`n = 6` is 2 header marks + 4 hero lines, confirmed in the DOM. Skip verified
-on wheel, pointerdown and keydown.
+`n = 5` is 2 header marks + 3 hero lines. It was 6 until the hero's "move your
+cursor" nudge was cut, which took 0.12 s off the tail.
+
+The entrance is CSS keyframes starting at parse time, not a GSAP timeline, so
+these values live in globals.css and mirror the motion tokens — change them
+together. Skip verified on wheel, keydown, pointerdown and a real touch tap.
 
 ### Contrast
 

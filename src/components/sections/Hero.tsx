@@ -116,9 +116,12 @@ export default function Hero() {
         go();
       };
       const off = onSurfaceLive(run);
-      // Cap: a slow chunk, or a machine with no WebGL at all, must never hold
-      // the ceremony hostage. There is simply no field to wake in that case.
-      timer = window.setTimeout(run, 1500);
+      // Cap: a machine with no WebGL at all must not leave amplitude pinned at
+      // zero forever. Nothing VISIBLE waits on this — the veil and the lines
+      // are CSS and have already run — so a generous cap costs nothing and
+      // buys the wake on slow connections. At 1.5s the deployed site missed it
+      // every time, because the surface chunk did not arrive until 8-17s.
+      timer = window.setTimeout(run, 12_000);
       cancelWait = done;
     };
 
@@ -183,12 +186,6 @@ export default function Hero() {
         Lagos&thinsp;→&thinsp;anywhere.
       </p>
 
-      {/* Split by pointer type: telling a touch visitor to move a cursor they
-          do not have reads as a site built for somebody else. */}
-      <p data-line className="mt-10 text-[0.8rem] text-ink-muted" style={{ fontFamily: BODY, "--line-i": 5 } as React.CSSProperties}>
-        <span className="hidden sm:inline">Go on — move your cursor.</span>
-        <span className="sm:hidden">Scroll.</span>
-      </p>
     </div>
   );
 }

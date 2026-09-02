@@ -3,7 +3,29 @@
 import dynamic from "next/dynamic";
 import type { ComponentProps } from "react";
 
-const SurfaceCanvas = dynamic(() => import("./SurfaceCanvas"), {
+/**
+ * Start fetching the surface the moment this module runs, rather than waiting
+ * for React to render it.
+ *
+ * `dynamic()` only kicks the import when the component first renders, which is
+ * after hydration. Measured on the deployed site over a real connection, that
+ * put the 237KB chunk's request at 16983ms — nine seconds after
+ * DOMContentLoaded — so the field did not exist until 8-17s in. The ceremony
+ * had long since given up waiting and the surface appeared already at rest,
+ * with no wake at all.
+ *
+ * Calling it here starts the download in parallel with hydration instead. The
+ * promise is shared: `dynamic` receives the same in-flight import rather than
+ * starting a second one.
+ */
+const load = () => import("./SurfaceCanvas");
+if (typeof window !== "undefined") {
+  // Fire and forget. A failure here is picked up by dynamic()'s own retry when
+  // it renders, and an unhandled rejection would be noise in the console.
+  void load().catch(() => {});
+}
+
+const SurfaceCanvas = dynamic(load, {
   ssr: false,
   /**
    * Flat ground, deliberately — it matches the surface's own amp-0 frame
