@@ -7,6 +7,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const URL = "http://localhost:3010/";
 const CH = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 
+// NOTE: domcontentloaded, not networkidle0. /api/now-playing polls Spotify on
+// an interval, so the network never goes fully idle and networkidle0 times out.
+// Every call site below already sleeps generously after navigating.
 const geo = () => ({
   main: Math.round(document.querySelector("main").getBoundingClientRect().height),
   scrollH: document.documentElement.scrollHeight,
@@ -54,7 +57,7 @@ const crossings = () => {
   // 1. page-height ratchet: shrink ladder + rotation
   const p = await b.newPage();
   await p.setViewport({ width: 1440, height: 1200 });
-  await p.goto(URL, { waitUntil: "networkidle0" });
+  await p.goto(URL, { waitUntil: "domcontentloaded" });
   await sleep(2200);
   const ladder = [{ vh: 1200, ...(await p.evaluate(geo)) }];
   for (const h of [700, 400, 1000, 500]) {
@@ -68,7 +71,7 @@ const crossings = () => {
   const ph = await b.newPage();
   await ph.emulate({ viewport: { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 3 },
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
-  await ph.goto(URL, { waitUntil: "networkidle0" });
+  await ph.goto(URL, { waitUntil: "domcontentloaded" });
   await sleep(2200);
   const portrait = await ph.evaluate(geo);
   await ph.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true, deviceScaleFactor: 3 });
@@ -82,7 +85,7 @@ const crossings = () => {
   for (const w of [320, 360, 390, 414, 767, 768, 1024, 1440]) {
     const q = await b.newPage();
     await q.setViewport({ width: w, height: 900 });
-    await q.goto(URL, { waitUntil: "networkidle0" });
+    await q.goto(URL, { waitUntil: "domcontentloaded" });
     await sleep(1500);
     out.spine.push({ w, ...(await q.evaluate(crossings)) });
     await q.close();
@@ -100,7 +103,7 @@ const crossings = () => {
 
   const deep = await b.newPage();
   await deep.setViewport({ width: 1440, height: 900 });
-  await deep.goto(URL, { waitUntil: "networkidle0" });
+  await deep.goto(URL, { waitUntil: "domcontentloaded" });
   await sleep(2000);
   await deep.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await sleep(2500);
@@ -117,7 +120,7 @@ const crossings = () => {
   const cdp = await r.createCDPSession();
   await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
   await r.setViewport({ width: 1440, height: 900 });
-  await r.goto(URL, { waitUntil: "networkidle0" });
+  await r.goto(URL, { waitUntil: "domcontentloaded" });
   await sleep(2200);
   const st = () => r.evaluate(() => ({
     veil: getComputedStyle(document.querySelector("[data-veil]")).opacity,
@@ -142,7 +145,7 @@ const crossings = () => {
       await c.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
     }
     await t.setViewport({ width: 1440, height: 900 });
-    await t.goto(URL, { waitUntil: "networkidle0" });
+    await t.goto(URL, { waitUntil: "domcontentloaded" });
     await sleep(2200);
     await t.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await sleep(2200);

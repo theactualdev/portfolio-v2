@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import NowPlaying from "./NowPlaying";
 
 const BODY = "var(--font-body), system-ui, sans-serif";
 
@@ -84,7 +85,10 @@ export default function Header() {
       {/* --line-i is the ceremony's running order across the whole page.
           The header marks arrive first, then the hero's four lines. */}
       <span data-line style={{ "--line-i": 0 } as React.CSSProperties}>theactualdev</span>
-      <span data-line style={{ "--line-i": 1 } as React.CSSProperties}>Available for work</span>
+      <span className="flex items-baseline gap-5">
+        <NowPlaying />
+        <span data-line style={{ "--line-i": 1 } as React.CSSProperties}>Available for work</span>
+      </span>
     </header>
   );
 }
