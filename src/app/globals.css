@@ -84,33 +84,66 @@ body { font-family: var(--font-body), system-ui, sans-serif; }
   }
 }
 
-/* --- ceremony gating -----------------------------------------------------
-   Without JS nothing is ever hidden: [data-line] elements are visible and no
-   veil exists. With JS, lines start hidden and the veil starts opaque, and
-   GSAP animates both. Reduced motion overrides back to the composed end
-   state so the page is instantly complete. */
-.js [data-line] { opacity: 0; transform: translateY(14px); }
+/* --- the entry ceremony, driven by CSS ------------------------------------
+   The veil and the lines animate from PARSE TIME, not from hydration.
+
+   They used to be GSAP tweens, which meant the page stayed deliberately blank
+   until React hydrated and the timeline started. Measured in WebKit that was
+   4.9-5.9s on an iPhone profile against a ceremony budget of 1.65s — the
+   reported "blank screen on my phone" was this, not a fault. Whether a visitor
+   can see anything at all must never depend on how fast a JS bundle parses.
+
+   So CSS owns the entrance and JavaScript only enhances it: GSAP still ramps
+   the surface amplitude, and the skip still works, but neither is required for
+   the page to become visible and composed.
+
+   Values mirror src/lib/motion/tokens.ts exactly — DUR.l 1.1s for the veil,
+   DUR.m 0.7s per line, 0.35s before the first line, STAGGER*2 = 0.12s between
+   them. The beziers are the token easings: expo.out and power2.inOut. Change
+   them together. */
+@keyframes veil-lift { to { opacity: 0; } }
+@keyframes line-rise { to { opacity: 1; transform: none; } }
+
+.js [data-line] {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: line-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* --line-i is the document-wide running order: header marks, then hero. */
+  animation-delay: calc(0.35s + var(--line-i, 0) * 0.12s);
+}
+
+[data-veil] { opacity: 0; }
+.js [data-veil] {
+  opacity: 1;
+  animation: veil-lift 1.1s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+/* Skip. Any sign of intent jumps to the composed end state — the animations
+   are finished rather than cancelled, so nothing snaps back. */
+.js.ceremony-skip [data-line],
+.js.ceremony-skip [data-veil] { animation-duration: 0.01s; animation-delay: 0s; }
+
 /* Same gating for the section-reveal convention. Without it the sections paint
-   fully visible from the server and are then blanked by gsap.set at hydration —
-   a visitor who reloads scrolled below the hero watches finished copy appear,
-   vanish, then fade back in. That is precisely the flash this mechanism exists
-   to prevent, and [data-line] was the only attribute protected from it. */
+   fully visible from the server and are then blanked at hydration — a visitor
+   who reloads scrolled below the hero watches finished copy appear, vanish,
+   then fade back in. These stay JS-driven because they are scroll-triggered,
+   which CSS cannot express; the dead man's switch below is their safety net. */
 .js [data-reveal] { opacity: 0; transform: translateY(14px); }
 
 /* The dead man's switch. Set by the inline head script when the veil has not
-   lifted 4s in — i.e. the ceremony never ran at all. Everything the gating
-   hid comes back, unconditionally. A page that fails to animate is a minor
+   lifted in time — i.e. the entrance never ran at all. Everything the gating
+   hid comes back, unconditionally. It should now be unreachable for the veil
+   and lines, since those no longer depend on JavaScript; it still covers
+   [data-reveal], which does. A page that fails to animate is a minor
    disappointment; a page that stays blank is not a page. */
 .js.ceremony-stalled [data-line],
 .js.ceremony-stalled [data-reveal] { opacity: 1 !important; transform: none !important; }
 .js.ceremony-stalled [data-veil] { opacity: 0 !important; }
-[data-veil] { opacity: 0; }
-.js [data-veil] { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .js [data-line] { opacity: 1; transform: none; }
+  .js [data-line] { opacity: 1; transform: none; animation: none; }
   .js [data-reveal] { opacity: 1; transform: none; }
-  .js [data-veil] { opacity: 0; }
+  .js [data-veil] { opacity: 0; animation: none; }
 }
 
 /* --- marquee ---------------------------------------------------------------

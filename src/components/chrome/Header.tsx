@@ -81,8 +81,10 @@ export default function Header() {
       className="fixed inset-x-0 top-0 z-20 flex items-baseline justify-between gap-3 px-[6vw] py-6 text-[0.6rem] uppercase tracking-[0.18em] text-ink-muted transition-opacity duration-300 motion-reduce:transition-none sm:text-[0.68rem] sm:tracking-[0.35em]"
       style={{ fontFamily: BODY }}
     >
-      <span data-line>theactualdev</span>
-      <span data-line>Available for work</span>
+      {/* --line-i is the ceremony's running order across the whole page.
+          The header marks arrive first, then the hero's four lines. */}
+      <span data-line style={{ "--line-i": 0 } as React.CSSProperties}>theactualdev</span>
+      <span data-line style={{ "--line-i": 1 } as React.CSSProperties}>Available for work</span>
     </header>
   );
 }

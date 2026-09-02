@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import gsap from "gsap";
-import { qaRegister } from "@/components/dev/QaHooks";
-import { EASE, DUR, STAGGER } from "@/lib/motion/tokens";
+import { EASE, DUR } from "@/lib/motion/tokens";
 import { surfaceDriver, REST_AMP, releaseAmp, onSurfaceLive } from "@/components/surface/surfaceDriver";
 
 /**
@@ -34,20 +33,19 @@ export default function Hero() {
     // timeline left to undo it — a permanently blank hero behind an opaque
     // veil, recoverable only by reloading.
     const compose = () => {
-      gsap.set("[data-line]", { opacity: 1, y: 0 });
-      gsap.set("[data-veil]", { opacity: 0 });
+      // Under reduced motion the CSS already composes both. Finishing the
+      // animations here covers a mid-session flip INTO reduced motion, where
+      // they may be part-way through.
+      document.documentElement.classList.add("ceremony-skip");
       surfaceDriver.amp = REST_AMP;
       releaseAmp();
     };
 
     const ceremony = () => {
       ctx = gsap.context(() => {
-        const tl = gsap.timeline({ defaults: { ease: EASE.enter } });
-
-        // The veil lifts, and the name arrives small over it.
-        tl.to("[data-veil]", { opacity: 0, duration: DUR.l, ease: EASE.move }, 0);
-        tl.to("[data-line]", { opacity: 1, y: 0, duration: DUR.m, stagger: STAGGER * 2 }, 0.35);
-
+        // The veil and the lines are CSS animations now — they start at
+        // parse time and do not wait for this code. See globals.css. All that
+        // is left here is the field's breath, which genuinely needs the canvas.
         /**
          * The field's breath is a SEPARATE tween, started when the surface
          * arrives — never blocking the type on it.
@@ -71,11 +69,10 @@ export default function Hero() {
           });
         whenSurfaceReady(breathe);
 
-        const unregister = qaRegister(tl);
-
-        // Any sign of intent jumps straight to the composed end state.
+        // Any sign of intent jumps straight to the composed end state. The CSS
+        // animations are finished rather than cancelled, so nothing snaps back.
         const skip = () => {
-          tl.progress(1);
+          document.documentElement.classList.add("ceremony-skip");
           cancelWait?.();
           gsap.to(surfaceDriver, {
             amp: REST_AMP,
@@ -89,7 +86,6 @@ export default function Hero() {
         window.addEventListener("keydown", skip, { once: true });
 
         return () => {
-          unregister();
           window.removeEventListener("wheel", skip);
           window.removeEventListener("pointerdown", skip);
           window.removeEventListener("keydown", skip);
@@ -153,7 +149,7 @@ export default function Hero() {
       <p
         data-line
         className="text-[0.72rem] uppercase tracking-[0.2em] text-ink-muted sm:tracking-[0.35em]"
-        style={{ fontFamily: BODY }}
+        style={{ fontFamily: BODY, "--line-i": 2 } as React.CSSProperties}
       >
         {/* Below sm this stacks without the separator rather than wrapping
             mid-phrase — at 390px it orphaned "ENGINEER", at 320px it left the
@@ -172,7 +168,8 @@ export default function Hero() {
           fontStretch: "115%",
           letterSpacing: "-0.015em",
           fontSize: "clamp(1.9rem, 3.2vw, 2.9rem)",
-        }}
+          "--line-i": 3,
+        } as React.CSSProperties}
       >
         I build interfaces that pay attention.
       </h1>
@@ -180,7 +177,7 @@ export default function Hero() {
       <p
         data-line
         className="mt-6 max-w-[44ch] text-[1.02rem] leading-relaxed text-ink-muted"
-        style={{ fontFamily: BODY }}
+        style={{ fontFamily: BODY, "--line-i": 4 } as React.CSSProperties}
       >
         React, Next.js, TypeScript. Founding frontend engineer at Nevo.
         Lagos&thinsp;→&thinsp;anywhere.
@@ -188,7 +185,7 @@ export default function Hero() {
 
       {/* Split by pointer type: telling a touch visitor to move a cursor they
           do not have reads as a site built for somebody else. */}
-      <p data-line className="mt-10 text-[0.8rem] text-ink-muted" style={{ fontFamily: BODY }}>
+      <p data-line className="mt-10 text-[0.8rem] text-ink-muted" style={{ fontFamily: BODY, "--line-i": 5 } as React.CSSProperties}>
         <span className="hidden sm:inline">Go on — move your cursor.</span>
         <span className="sm:hidden">Scroll.</span>
       </p>
