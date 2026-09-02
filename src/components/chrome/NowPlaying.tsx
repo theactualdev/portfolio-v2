@@ -75,7 +75,27 @@ export default function NowPlaying() {
       {/* The tick. One cream hairline, the same weight as the spine. */}
       <span aria-hidden="true" className="inline-block h-[0.62em] w-px bg-ink/40" />
       <span className="sr-only">Currently listening to </span>
-      {now.artist || now.track}
+      {/* Caps at 0.35em tracking are roughly twice as wide as a `ch`, so these
+          limits are in rem. Measured with a punishing 61-character track name:
+          no collision at 640-1920, and 684px still free at 1440. */}
+      <span className="max-w-[10rem] truncate lg:max-w-[17rem]">{now.artist || now.track}</span>
+      {now.artist && now.track && (
+        // The song only appears from lg up. Below that the masthead is already
+        // carrying two marks and the artist alone is the useful half — at 640px
+        // the three of them left just 12px of air.
+        <span className="hidden items-baseline gap-2 lg:flex">
+          {/* The divider is the same hairline as the tick rather than a pipe
+              glyph — the page has no other punctuation like that, and a rule at
+              the spine's weight is already its vocabulary. */}
+          <span aria-hidden="true" className="inline-block h-[0.5em] w-px bg-ink/25" />
+          <span className="sr-only"> — </span>
+          {/* Track names run long ("WICKED CITY (feat. Gus Dapperton)"), and
+              this sits in a fixed masthead beside two other marks, so it
+              truncates rather than shoving them. The title attribute and the
+              accessible name both carry the full text. */}
+          <span className="max-w-[20rem] truncate">{now.track}</span>
+        </span>
+      )}
     </a>
   );
 }
