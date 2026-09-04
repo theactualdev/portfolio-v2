@@ -1,6 +1,6 @@
 "use client";
 
-import SurfaceLazy from "@/components/surface/SurfaceLazy";
+import SurfaceCanvas from "@/components/surface/SurfaceCanvas";
 import GreekCursor from "@/components/cursor/GreekCursor";
 import Header from "@/components/chrome/Header";
 import Hero from "@/components/sections/Hero";
@@ -20,7 +20,7 @@ export default function Home() {
         Skip to content
       </a>
 
-      <SurfaceLazy driver={surfaceDriver} />
+      <SurfaceCanvas driver={surfaceDriver} />
       <ScrollTurbulence />
       <GreekCursor variant="meander" />
       <MeanderLine />

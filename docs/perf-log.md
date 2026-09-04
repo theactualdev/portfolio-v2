@@ -134,3 +134,100 @@ is **4.64:1**; the accent email link is 4.78:1. See the Task 9 commit.
   exactly like a broken page.
 - `/dev/*` routes `notFound()` in production, so production-build measurements
   taken against them measure nothing.
+
+## 2026-09-04 — the surface leaves three.js
+
+Measured on Playwright WebKit against `next start` on :3021 (production build)
+for the rewrite, and against the deployed three/R3F build on
+`https://www.olayinka.tech/` for the before column. Pixels decoded with
+`sharp`; see the harness note on why PNG bytes are not comparable.
+
+### Why
+
+The surface draws one fullscreen quad with one fragment shader. Its vertex
+shader writes clip space directly and never touches a matrix, so three's scene
+graph, camera, materials, loaders and math library were all unused. The
+complete list of what the component imported was `Canvas`/`useFrame`/
+`useThree`, `Vector2`, `MathUtils.lerp`, `ShaderMaterial` (as a type), and
+`mesh`/`planeGeometry`/`shaderMaterial`.
+
+That cost a **237 KB gz** chunk which, because it was code-split to keep it off
+the critical path, appeared **nowhere in the served HTML** — no `<script>`, no
+preload, no `modulepreload`. The browser could not discover it until the main
+bundle had downloaded, parsed and executed, so on a cold iPhone load it was
+requested at **2333 ms** and the canvas did not exist until **3650 ms**. The
+owner measured **3 s** to first field on a real iPhone in a private tab; warm,
+the same device was 1 s.
+
+Preloading it was considered first and rejected: Turbopack's manifests do not
+name the chunk (it is referenced by none of them, and five separate chunks
+contain the shader because each `/dev/*` route bundles its own copy), so a
+preload would have meant a post-build script identifying the chunk by grepping
+its contents.
+
+### Weight
+
+Whole-page JS, `transferSize` summed on an iPhone 13 profile:
+
+| | JS downloaded |
+|---|---|
+| deployed, three/R3F | **433 KB** |
+| local, raw WebGL | **191 KB** |
+
+`three`, `@react-three/fiber` and `@types/three` are removed from
+`package.json`. No dynamic import remains: `SurfaceLazy.tsx` is deleted and
+`page.tsx` imports `SurfaceCanvas` statically, so there is no async chunk and
+nothing left to preload. `surface.glsl.ts` is **unchanged** — the declarations
+three used to inject (`position`, `uv`, precision) are supplied as a prelude at
+compile time instead.
+
+### Parity against the three implementation
+
+| check | result |
+|---|---|
+| field renders with structure | stddev **8.26** (flat fill ≈ 0) |
+| DPR capped at 1 | buffer 1200×800 === CSS 1200×800 |
+| console errors | none |
+| pointer lens responds | opposite corners, MAD **6.14**/255 |
+| reduced motion: pointer pinned | MAD **exactly 0** |
+| reduced motion: clock frozen | 1.5 s apart, MAD **exactly 0** |
+| no-WebGL fallback | gradient shown, canvas absent |
+| quality tier, desktop | fine pointer true |
+| quality tier, iPhone | fine pointer false |
+
+Side by side, isolated to the canvas:
+
+| build | reduced-motion | mean | stddev | range |
+|---|---|---|---|---|
+| raw WebGL | no-preference | 13.08 | 8.011 | 8–55 |
+| three | no-preference | 13.14 | 8.030 | 8–55 |
+| raw WebGL | reduce | 9.12 | **0.626** | 8–10 |
+| three | reduce | 9.12 | **0.626** | 8–10 |
+
+Identical to three decimal places under reduced motion, and within
+screenshot-timing noise on the live field.
+
+### Found while verifying: the reduced-motion still frame is blank
+
+Both builds render reduced motion as a near-flat fill — stddev **0.626**, all
+channels within **8–10 of 255**. Not a regression from the rewrite; it
+reproduces exactly on the deployed three build.
+
+The cause is that `uAmp` acquired a second job. The still-frame branch pins
+`uAmp = 0` because amplitude used to feed only the domain warp. The presence
+ramp (`presence = smoothstep(0.0, REST_AMP, uAmp)`, added so the entry ceremony
+wakes the field rather than morphing an already-visible one) made `uAmp = 0`
+mean *absent*, and the still branch was never updated. So the "designed still
+frame" the comments promise is a blank rectangle for every reduced-motion
+visitor.
+
+Fix is `uAmp = REST_AMP` in the frozen branch: presence saturates, the resting
+warp is the approved composition, and every motion input stays pinned.
+
+### Harness note
+
+`page.screenshot()` returning a stale WebGL frame would make a frozen-field
+check pass for the wrong reason. The positive control is in the same suite and
+the same method: the live pointer-lens check moved **6.14**/255 across the same
+two screenshots. A method that captures that is not returning stale frames when
+it reports 0.
