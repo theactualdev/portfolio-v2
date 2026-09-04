@@ -5,17 +5,14 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSectionReveal } from "@/lib/motion/useSectionReveal";
 import { surfaceDriver } from "@/components/surface/surfaceDriver";
+import { SOCIALS } from "@/lib/site";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
 const BODY = "var(--font-body), system-ui, sans-serif";
 const DISPLAY = "var(--font-display), system-ui, sans-serif";
 
-const SOCIALS = [
-  { label: "GitHub", href: "https://github.com/theactualdev" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/theactualdev" },
-  { label: "X", href: "https://x.com/theactualdev" },
-];
+// SOCIALS live in @/lib/site so the JSON-LD sameAs array is the same list.
 
 /**
  * The finale. This is where the amber pays off: the surface warms as you

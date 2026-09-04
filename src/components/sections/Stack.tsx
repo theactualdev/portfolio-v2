@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useSectionReveal } from "@/lib/motion/useSectionReveal";
+import { STACK_PRIMARY, STACK_SECONDARY } from "@/lib/site";
 
 const BODY = "var(--font-body), system-ui, sans-serif";
 const DISPLAY = "var(--font-display), system-ui, sans-serif";
@@ -31,47 +32,22 @@ const DISPLAY = "var(--font-display), system-ui, sans-serif";
  * an inventory.
  */
 /**
- * EVIDENCE RULE: nothing appears here that is not either on his resume or
- * demonstrably used in something he shipped. An unbacked name is the same
- * defect as the "four years" claim this site already had to remove — and it is
- * the one a peer is most likely to ask about in an interview.
- *
- * Resume: TypeScript, JavaScript, React, Next.js, Tailwind CSS, Firebase,
- * MongoDB, Git, Vite, Turbopack, Postman, Figma.
- * Evidenced by the products: Paystack and Prisma (MSE LUX), NestJS (Bleachers),
- * OpenCV.js (FaceBlur).
- * Evidenced by this site: GSAP, WebGL, Three.js.
+ * The lists and the evidence rule that governs them now live in
+ * `@/lib/site`, because the JSON-LD `knowsAbout` array has to be the same
+ * claim as this marquee. They drifted once already: the surface stopped using
+ * three.js and this section went on advertising Three.js.
  */
-const ROW_A = [
-  "TypeScript",
-  "React",
-  "Next.js",
-  "Tailwind CSS",
-  "GSAP",
-  "WebGL",
-  "Three.js",
-];
-
-const ROW_B = [
-  "NestJS",
-  "Prisma",
-  "MongoDB",
-  "Firebase",
-  "Paystack",
-  "OpenCV.js",
-  "Vite",
-  "Turbopack",
-  "Git",
-  "Figma",
-  "Postman",
-];
+const ROW_A = STACK_PRIMARY;
+const ROW_B = STACK_SECONDARY;
 
 function Strip({
   items,
   seconds,
   reverse = false,
 }: {
-  items: string[];
+  // readonly: the lists come from `@/lib/site` as `as const`, which is what
+  // stops anything here from mutating a claim the JSON-LD also makes.
+  items: readonly string[];
   seconds: number;
   reverse?: boolean;
 }) {

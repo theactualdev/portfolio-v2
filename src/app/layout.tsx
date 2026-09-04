@@ -1,13 +1,116 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import QaHooks from "@/components/dev/QaHooks";
 import SmoothScroll from "@/components/providers/SmoothScroll";
 import { archivo, generalSans } from "@/lib/fonts";
+import {
+  CURRENT_ORG,
+  CURRENT_ROLE,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+  SOCIALS,
+  STACK_PRIMARY,
+  STACK_SECONDARY,
+  THEME_COLOR,
+  UNIVERSITY,
+  X_HANDLE,
+} from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ayodele Olayinka — Frontend Engineer",
-  description:
-    "Frontend engineer building interfaces that pay attention. React, Next.js, TypeScript.",
+  /**
+   * Without this Next resolves relative metadata URLs against VERCEL_URL,
+   * which is the *.vercel.app deployment host — so every generated og:image
+   * and canonical would advertise a hostname that is not the site. The apex
+   * is canonical and `www` redirects to it.
+   */
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    locale: "en_US",
+  },
+
+  /**
+   * summary_large_image is what every comparable site ships — surveyed, 10 of
+   * the 13 that carry cards at all. `summary` renders a small square thumbnail
+   * beside the text instead, which wastes the one image anyone will see.
+   */
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    creator: X_HANDLE,
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+};
+
+/**
+ * themeColor belongs on the viewport export, not on metadata — Next moved it
+ * and warns at build time otherwise. It paints the browser chrome around the
+ * page on mobile, so on a site this dark, leaving it unset means a white bar
+ * above a near-black page.
+ */
+export const viewport: Viewport = {
+  themeColor: THEME_COLOR,
+  colorScheme: "dark",
+};
+
+/**
+ * Structured data, as a single @graph with stable @id values so the Person and
+ * the WebSite reference each other rather than floating as two unrelated
+ * entities. This is the piece almost nobody ships: of fifteen comparable sites
+ * surveyed, exactly one carried a Person schema. It is what search engines and
+ * AI answer engines read to decide that a name is an entity rather than a
+ * string.
+ *
+ * Every field is drawn from `@/lib/site`, which the visible page also reads,
+ * so the machine-readable claims cannot drift from the rendered ones.
+ */
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#person`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      jobTitle: CURRENT_ROLE,
+      description: SITE_DESCRIPTION,
+      // Already published in plain text on the contact section, so this
+      // exposes nothing the page does not.
+      email: "mailto:olayinkacodes@gmail.com",
+      worksFor: { "@type": "Organization", name: CURRENT_ORG },
+      // Enrolled, not graduated: alumniOf would be a false claim.
+      affiliation: { "@type": "CollegeOrUniversity", name: UNIVERSITY },
+      knowsAbout: [...STACK_PRIMARY, ...STACK_SECONDARY],
+      sameAs: SOCIALS.map((s) => s.href),
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      inLanguage: "en",
+      publisher: { "@id": `${SITE_URL}/#person` },
+    },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -62,6 +165,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body>
+        {/*
+          JSON-LD in the body rather than the head: both are valid per the
+          spec and Google reads either, and keeping it out of <head> leaves the
+          critical path above untouched by a block that only crawlers consume.
+        */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {process.env.NODE_ENV !== "production" && <QaHooks />}
         <SmoothScroll>{children}</SmoothScroll>
       </body>

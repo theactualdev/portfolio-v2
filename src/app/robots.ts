@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * The apex is canonical: `www` 307s to it, so every URL advertised here is the
@@ -10,12 +11,11 @@ import type { MetadataRoute } from "next";
  * type specimens used during the build — and they `notFound()` in production
  * rather than being removed. A crawler has no reason to walk into four 404s.
  */
-export const SITE = "https://olayinka.tech";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: "*", allow: "/", disallow: "/dev/" }],
-    sitemap: `${SITE}/sitemap.xml`,
-    host: SITE,
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

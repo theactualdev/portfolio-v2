@@ -10,7 +10,9 @@ The creative direction is locked and lives in the `portfolio-direction` skill �
 
 ## Stack
 
-Next.js (App Router) · TypeScript · Tailwind v4 · GSAP + Lenis · React Three Fiber (surface material per the `webgl-surface` skill once written). No other UI/animation libraries without explicit discussion.
+Next.js (App Router) · TypeScript · Tailwind v4 · GSAP + Lenis · **raw WebGL** for the surface. No other UI/animation libraries without explicit discussion.
+
+The surface was three.js + react-three-fiber until 2026-09-04. It draws one fullscreen quad with one fragment shader and used none of three's scene graph, camera or math, so 237KB gz bought a `<canvas>` and a render loop. Removing it took whole-page JS from 433KB to 197KB. `three`, `@react-three/fiber` and `@types/three` are uninstalled — do not reintroduce them for the surface. See `SurfaceCanvas.tsx` and `docs/perf-log.md`.
 
 ## Hard rules
 
@@ -25,7 +27,7 @@ Next.js (App Router) · TypeScript · Tailwind v4 · GSAP + Lenis · React Three
 
 - LCP ≤ 2.5s · CLS < 0.05 · INP < 200ms
 - Entry ceremony: interactive ≤ 2.5s on desktop broadband; ceremony never blocks input past 3s (skippable by scroll/click)
-- JS ≤ 300KB gzipped before the WebGL bundle; WebGL bundle lazy-loaded, page fully usable without it (fallback ladder)
+- JS ≤ 300KB gzipped. There is no separate WebGL bundle any more: the surface has no dependency, so it ships in the main chunk and there is no lazy import to preload. The no-WebGL fallback ladder still applies and is still verified.
 - 60fps scroll on desktop; no main-thread task > 200ms during entry
 - Fonts: self-hosted, subset, `font-display: swap` with matched fallback metrics — no layout shift on swap
 
