@@ -221,8 +221,19 @@ mean *absent*, and the still branch was never updated. So the "designed still
 frame" the comments promise is a blank rectangle for every reduced-motion
 visitor.
 
-Fix is `uAmp = REST_AMP` in the frozen branch: presence saturates, the resting
-warp is the approved composition, and every motion input stays pinned.
+Fixed in the frozen branch: `uAmp = REST_AMP` rather than 0, so presence
+saturates and the resting warp is the approved composition, while every motion
+input stays pinned. Measured after:
+
+| build | reduced-motion | mean | stddev | range |
+|---|---|---|---|---|
+| raw WebGL, fixed | reduce | 13.14 | **8.171** | 8-55 |
+| raw WebGL, fixed | no-preference | 13.26 | 8.115 | 8-55 |
+| three, deployed | reduce | 9.12 | 0.626 | 8-10 |
+
+The still frame now carries the same structure as the live field, and is still
+frozen: pointer moved across the viewport and 1.5 s of clock both give a mean
+absolute difference of **exactly 0**.
 
 ### Harness note
 

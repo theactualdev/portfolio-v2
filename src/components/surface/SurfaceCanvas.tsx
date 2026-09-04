@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { surfaceVert, surfaceFrag } from "./surface.glsl";
-import { markSurfaceLive } from "./surfaceDriver";
+import { markSurfaceLive, REST_AMP } from "./surfaceDriver";
 
 type Props = {
   amplitude?: number;
@@ -340,8 +340,20 @@ export default function SurfaceCanvas({
          *
          * So the still frame pins every motion input and holds the designed
          * composition. Hue is deliberately left live — it is colour, not motion.
+         *
+         * Amplitude rests at REST_AMP rather than 0, which is a fix, not a
+         * transcription of what three did. `uAmp` used to drive the domain warp
+         * alone, so pinning it to 0 meant "unwarped" and the still frame was
+         * the designed composition. The presence ramp then gave amplitude a
+         * second job — `presence = smoothstep(0.0, REST_AMP, uAmp)` — and 0
+         * started meaning ABSENT. This branch was never updated, so every
+         * reduced-motion visitor got a flat fill: measured on the deployed
+         * build at stddev 0.626 with all channels inside 8-10 of 255, against
+         * 8.03 for the live field. Resting at REST_AMP saturates presence and
+         * holds the resting warp, so the frame is the approved composition
+         * while every motion input stays pinned.
          */
-        gl.uniform1f(loc.uAmp, 0);
+        gl.uniform1f(loc.uAmp, REST_AMP);
         gl.uniform2f(loc.uPointer, 0.5, 0.5);
         gl.uniform1f(loc.uVel, 0);
       } else {
