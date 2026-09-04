@@ -242,3 +242,38 @@ check pass for the wrong reason. The positive control is in the same suite and
 the same method: the live pointer-lens check moved **6.14**/255 across the same
 two screenshots. A method that captures that is not returning stale frames when
 it reports 0.
+
+### Contrast, now measured rather than argued (2026-09-04)
+
+`scripts/qa/regress.js` gained a contrast pass. Worst element anywhere on the
+page is **5.07:1** ("theactualdev", `rgb(180,177,168)`), **0 below AA**, across
+**102 text runs**. Earlier entries quoted 4.64:1 and 4.78:1 from a different
+method; this one measures more strictly and is reproducible to the digit.
+
+Getting it right took three wrong versions, and all three failed in ways that
+LOOKED like answers:
+
+1. **Brightest pixel in the element's rect.** Reported the footer credit at
+   4.19:1, below AA. Wrong: that rect is 1179px wide and its letters occupy
+   ~500px. Bright field showing through the whitespace was counted as though
+   it were behind text.
+2. **Brightest pixel under glyphs, live field.** Reported a bimodal 7.15 / 4.25
+   across ten frames. Wrong: the background is read by hiding the text and
+   re-photographing, so anything that moves between the two shots is
+   indistinguishable from a glyph. The low readings were frames where the
+   shader had advanced.
+3. **Frozen field, glyph pixels — but with `/d+/` instead of `/\d+/`.** Every
+   colour failed to parse, every element hit `continue`, and the pass reported
+   `worstRatio: 99, belowAA: 0` having sampled **zero** pixels. It read as a
+   clean pass.
+
+The control that settled it: with the field frozen, the same measurement
+returns **7.21:1 ten times out of ten with zero variance**, against a bimodal
+spread on the live field. Zero variance is the signal that the harness is
+finally measuring the page and not itself.
+
+So the pass measures on the frozen field, which is fair because the still frame
+is the same composition as the live one (mean 13.14 vs 13.26, stddev 8.171 vs
+8.115, identical 8-55 range) — it just holds still. And it now throws if it
+scores fewer than 10 runs, because a pass that measures nothing must not be
+allowed to look like a pass.
