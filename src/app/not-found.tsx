@@ -1,7 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_NAME } from "@/lib/site";
 
 const BODY = "var(--font-body), system-ui, sans-serif";
 const DISPLAY = "var(--font-display), system-ui, sans-serif";
+
+/**
+ * Its own title, rather than the root layout's.
+ *
+ * Without this the tab on a dead link reads "Ayodele Olayinka — Frontend
+ * Engineer", which is a small lie: the page being looked at is not that. The
+ * og:image and description are deliberately left inherited, so a broken link
+ * someone shares still unfurls as the site rather than as nothing.
+ */
+export const metadata: Metadata = {
+  title: `Not found — ${SITE_NAME}`,
+};
 
 /**
  * The 404.

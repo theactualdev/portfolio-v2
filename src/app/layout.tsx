@@ -53,10 +53,19 @@ export const metadata: Metadata = {
     creator: X_HANDLE,
   },
 
+  /**
+   * `index, follow` is the default and saying it out loud is not free: this is
+   * the ROOT layout, so every route inherited it — including not-found, which
+   * Next already marks `noindex`. The 404 was shipping both directives at
+   * once. Google resolves a conflict to the most restrictive so the page was
+   * still correctly excluded, but contradicting yourself in the head is not
+   * something to leave in.
+   *
+   * Only the non-default part is declared. max-image-preview lets the card
+   * appear at full size in search results rather than as a thumbnail.
+   */
   robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+    googleBot: { "max-image-preview": "large" },
   },
 };
 
